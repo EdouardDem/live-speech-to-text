@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "live-stt"
+version = "0.1.0"
+description = "Live speech-to-text daemon using NVIDIA Parakeet on Linux"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = [
+    "nemo_toolkit[asr]",
+    "sounddevice",
+    "soundfile",
+    "pynput",
+    "pystray",
+    "Pillow",
+    "PyYAML",
+    "numpy",
+]
+
+[project.scripts]
+live-stt = "live_stt.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,8 @@
+nemo_toolkit[asr]
+sounddevice
+soundfile
+pynput
+pystray
+Pillow
+PyYAML
+numpy
