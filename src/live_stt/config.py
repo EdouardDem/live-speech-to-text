@@ -8,7 +8,7 @@ DEFAULT_CONFIG_PATH = Path.home() / ".config" / "live-stt" / "config.yaml"
 
 @dataclass
 class Config:
-    hotkey: str = "<ctrl>+<shift>+s"
+    hotkey: str = "<ctrl>+<shift>+z"
     model_name: str = "nvidia/parakeet-tdt-0.6b-v3"
     sample_rate: int = 16000
     device: str = "auto"  # auto | cpu | cuda

@@ -6,7 +6,7 @@ the transcript into the currently focused text field, powered by
 
 ## How it works
 
-1. Press a global hotkey (default **Ctrl+Shift+S**) to start recording.
+1. Press a global hotkey (default **Ctrl+Shift+Z**) to start recording.
 2. Press the hotkey again to stop.
 3. The audio is transcribed locally using the Parakeet model (GPU-accelerated
    when available).
@@ -105,7 +105,7 @@ Settings can also be overridden via CLI flags (see `live-stt --help`).
 
 | Key            | Default                          | Description                        |
 |----------------|----------------------------------|------------------------------------|
-| `hotkey`       | `<ctrl>+<shift>+s`              | Global hotkey (pynput format)      |
+| `hotkey`       | `<ctrl>+<shift>+z`              | Global hotkey (pynput format)      |
 | `model_name`   | `nvidia/parakeet-tdt-0.6b-v3`   | HuggingFace model identifier       |
 | `sample_rate`  | `16000`                          | Mic sample rate in Hz              |
 | `device`       | `auto`                           | `auto`, `cpu`, or `cuda`           |

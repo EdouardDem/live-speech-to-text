@@ -3,7 +3,7 @@
 
 # Hotkey to toggle recording (pynput format).
 # See https://pynput.readthedocs.io/en/latest/keyboard.html#global-hotkeys
-hotkey: "<ctrl>+<shift>+s"
+hotkey: "<ctrl>+<shift>+z"
 
 # HuggingFace model identifier.
 # Parakeet v3 auto-detects among 25 European languages — no language flag needed.
