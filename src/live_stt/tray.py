@@ -20,12 +20,14 @@ _TITLES = {
 
 def _make_icon(state: str) -> Image.Image:
     size = 64
+    margin = 8
+    recording_margin = 20
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     color = _COLORS.get(state, _COLORS["idle"])
-    draw.ellipse([4, 4, size - 4, size - 4], fill=color)
+    draw.ellipse([margin, margin, size - margin, size - margin], fill=color)
     if state == "recording":
-        draw.ellipse([20, 20, size - 20, size - 20], fill="#ffffff")
+        draw.ellipse([recording_margin, recording_margin, size - recording_margin, size - recording_margin], fill="#ffffff")
     return img
 
 

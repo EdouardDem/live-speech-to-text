@@ -1,0 +1,1 @@
+Je veux que tu codes une app complète avec un back-end et un front-end et que ça envoie des paillettes à la fin.
