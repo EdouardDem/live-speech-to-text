@@ -9,16 +9,18 @@ the transcript into the currently focused text field, powered by
 1. Press a global hotkey (default **Ctrl+Shift+Z**) to start recording.
 2. Press the hotkey again to stop.
 3. The audio is transcribed locally using the Parakeet model (GPU-accelerated
-   when available).
+  when available).
 4. The resulting text is pasted into whatever input field has focus.
 
 A system-tray icon provides visual feedback:
 
-| Color  | State         |
-|--------|---------------|
-| Grey   | Idle          |
-| Red    | Recording     |
-| Orange | Transcribing  |
+
+| Color  | State        |
+| ------ | ------------ |
+| Grey   | Idle         |
+| Red    | Recording    |
+| Orange | Transcribing |
+
 
 ## Prerequisites
 
@@ -50,7 +52,7 @@ If you have an NVIDIA GPU, install the CUDA build of PyTorch **before**
 installing the project so NeMo picks it up automatically:
 
 ```bash
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+pip install torch torchvision torchaudio
 ```
 
 Skip this step to use CPU-only inference.
@@ -103,13 +105,15 @@ cp config.yaml ~/.config/live-stt/config.yaml
 
 Settings can also be overridden via CLI flags (see `live-stt --help`).
 
-| Key            | Default                          | Description                        |
-|----------------|----------------------------------|------------------------------------|
-| `hotkey`       | `<ctrl>+<shift>+z`              | Global hotkey (pynput format)      |
-| `model_name`   | `nvidia/parakeet-tdt-0.6b-v3`   | HuggingFace model identifier       |
-| `sample_rate`  | `16000`                          | Mic sample rate in Hz              |
-| `device`       | `auto`                           | `auto`, `cpu`, or `cuda`           |
-| `paste_method` | `auto`                           | `auto`, `xclip`, `xdotool`, `wayland` |
+
+| Key            | Default                       | Description                           |
+| -------------- | ----------------------------- | ------------------------------------- |
+| `hotkey`       | `<ctrl>+<shift>+z`            | Global hotkey (pynput format)         |
+| `model_name`   | `nvidia/parakeet-tdt-0.6b-v3` | HuggingFace model identifier          |
+| `sample_rate`  | `16000`                       | Mic sample rate in Hz                 |
+| `device`       | `auto`                        | `auto`, `cpu`, or `cuda`              |
+| `paste_method` | `auto`                        | `auto`, `xclip`, `xdotool`, `wayland` |
+
 
 ## Supported languages
 
