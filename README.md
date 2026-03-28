@@ -24,7 +24,21 @@ A system-tray icon provides visual feedback:
 
 ## Prerequisites
 
-### System packages (Debian / Ubuntu)
+### Installation script
+
+```bash
+./install.sh
+```
+
+### Uninstallation script
+
+```bash
+./uninstall.sh
+```
+
+### Step by step installation
+
+#### 1. System packages (Debian / Ubuntu)
 
 ```bash
 # Audio capture
@@ -37,7 +51,7 @@ sudo apt install xdotool xclip
 # sudo apt install wl-clipboard wtype
 ```
 
-### Python
+#### 2. Python
 
 Python >= 3.10 is required. A virtual environment is recommended:
 
@@ -46,27 +60,10 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### PyTorch (GPU)
-
-If you have an NVIDIA GPU, install the CUDA build of PyTorch **before**
-installing the project so NeMo picks it up automatically:
-
-```bash
-pip install torch torchvision torchaudio
-```
-
-Skip this step to use CPU-only inference.
-
-## Install
+#### 3. Install
 
 ```bash
 pip install -e .
-```
-
-Or install dependencies directly:
-
-```bash
-pip install -r requirements.txt
 ```
 
 ## Usage
@@ -96,14 +93,14 @@ python -m live_stt
 
 ## Configuration
 
-Copy the example config and edit to taste:
+If you want a persistent configuration, copy the example config and edit the config file:
 
 ```bash
 mkdir -p ~/.config/live-stt
 cp config.yaml ~/.config/live-stt/config.yaml
 ```
 
-Settings can also be overridden via CLI flags (see `live-stt --help`).
+Settings can also be set via CLI flags (see `live-stt --help`).
 
 
 | Key            | Default                       | Description                           |

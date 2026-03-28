@@ -4,6 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import soundfile as sf
+import nemo.collections.asr as nemo_asr
 
 log = logging.getLogger(__name__)
 
@@ -20,26 +21,14 @@ class Transcriber:
         self._device_pref = device
         self._model = None
 
-    def _resolve_device(self) -> str:
-        if self._device_pref != "auto":
-            return self._device_pref
-        try:
-            import torch
-
-            return "cuda" if torch.cuda.is_available() else "cpu"
-        except ImportError:
-            return "cpu"
-
     def load(self) -> None:
-        import nemo.collections.asr as nemo_asr
 
-        device = self._resolve_device()
-        log.info("Loading model %s on %s …", self.model_name, device)
+        device = self._device_pref if self._device_pref != "auto" else None
+        log.info("Loading model %s on %s …", self.model_name, self._device_pref)
         self._model = nemo_asr.models.ASRModel.from_pretrained(
             model_name=self.model_name,
+            map_location=device,
         )
-        if device == "cuda":
-            self._model = self._model.cuda()
         self._model.eval()
         log.info("Model ready.")
 
