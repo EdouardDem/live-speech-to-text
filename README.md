@@ -69,6 +69,17 @@ pip install -e .
 ## Usage
 
 ```bash
+# Quick start (activates the virtual environment automatically)
+./start.sh
+
+# With options
+./start.sh --no-tray
+./start.sh --hotkey '<super>+s'
+```
+
+If the virtual environment is already activated, you can run `live-stt` directly:
+
+```bash
 # Run with system tray icon (default)
 live-stt
 
