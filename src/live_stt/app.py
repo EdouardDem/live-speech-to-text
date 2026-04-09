@@ -109,8 +109,13 @@ class App:
             if text:
                 log.info("Transcript: %s", text)
                 if translate:
+                    if self._tray:
+                        self._tray.set_state("translating")
                     if self._translator is None:
-                        self._translator = Translator()
+                        self._translator = Translator(
+                            model=self._cfg.translate_model,
+                            max_tokens=self._cfg.translate_max_tokens,
+                        )
                     log.info("Translating to %s…", self._cfg.translate_language)
                     text = self._translator.translate(text, self._cfg.translate_language)
                     log.info("Translation: %s", text)

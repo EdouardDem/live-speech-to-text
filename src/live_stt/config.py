@@ -15,6 +15,8 @@ class Config:
     paste_method: str = "auto"  # auto | xclip | xdotool | wayland
     translate_hotkey: str = "<ctrl>+<shift>+t"
     translate_language: str = "English"
+    translate_model: str = "claude-3-5-haiku-latest"
+    translate_max_tokens: int = 1024
 
     @classmethod
     def load(cls, path: str | Path | None = None) -> "Config":

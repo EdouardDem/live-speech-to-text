@@ -23,3 +23,9 @@ translate_hotkey: "<ctrl>+<shift>+t"
 
 # Target language for translation (requires ANTHROPIC_API_KEY).
 translate_language: "English"
+
+# Claude model for translation.
+translate_model: "claude-3-5-haiku-latest"
+
+# Max tokens for translation response.
+translate_max_tokens: 1024

@@ -60,6 +60,15 @@ def main() -> None:
         help="Target language for translation (default: English)",
     )
     parser.add_argument(
+        "--translate-model",
+        help="Claude model for translation (default: claude-3-5-haiku-latest)",
+    )
+    parser.add_argument(
+        "--translate-max-tokens",
+        type=int,
+        help="Max tokens for translation response (default: 1024)",
+    )
+    parser.add_argument(
         "-v", "--verbose", action="store_true", help="Enable debug logging"
     )
     args = parser.parse_args()
@@ -86,6 +95,10 @@ def main() -> None:
         config.translate_hotkey = args.translate_hotkey
     if args.translate_language:
         config.translate_language = args.translate_language
+    if args.translate_model:
+        config.translate_model = args.translate_model
+    if args.translate_max_tokens:
+        config.translate_max_tokens = args.translate_max_tokens
 
     app = App(config, use_tray=not args.no_tray)
     try:

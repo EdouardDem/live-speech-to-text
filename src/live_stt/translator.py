@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 
 class Translator:
-    def __init__(self):
+    def __init__(self, model: str, max_tokens: int):
         load_dotenv()
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
@@ -17,12 +17,14 @@ class Translator:
                 "Set it in environment or in a .env file."
             )
         self._client = anthropic.Anthropic(api_key=api_key)
+        self._model = model
+        self._max_tokens = max_tokens
 
     def translate(self, text: str, target_language: str) -> str:
         log.debug("Translating to %s: %s", target_language, text)
         response = self._client.messages.create(
-            model="claude-3-5-haiku-latest",
-            max_tokens=1024,
+            model=self._model,
+            max_tokens=self._max_tokens,
             messages=[
                 {
                     "role": "user",
