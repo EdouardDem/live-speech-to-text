@@ -3,6 +3,8 @@ import logging
 import shutil
 import sys
 
+from dotenv import load_dotenv
+
 from .app import App
 from .config import Config
 
@@ -27,6 +29,8 @@ def _check_system_deps() -> list[str]:
 
 
 def main() -> None:
+    load_dotenv()
+
     parser = argparse.ArgumentParser(
         prog="live-stt",
         description="Live speech-to-text using NVIDIA Parakeet",
@@ -46,6 +50,14 @@ def main() -> None:
         "--no-tray",
         action="store_true",
         help="Run without system-tray icon (headless mode)",
+    )
+    parser.add_argument(
+        "--translate-hotkey",
+        help="Override translation hotkey (pynput format, e.g. '<ctrl>+<shift>+t')",
+    )
+    parser.add_argument(
+        "--translate-language",
+        help="Target language for translation (default: English)",
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Enable debug logging"
@@ -70,6 +82,10 @@ def main() -> None:
         config.model_name = args.model
     if args.device:
         config.device = args.device
+    if args.translate_hotkey:
+        config.translate_hotkey = args.translate_hotkey
+    if args.translate_language:
+        config.translate_language = args.translate_language
 
     app = App(config, use_tray=not args.no_tray)
     try:

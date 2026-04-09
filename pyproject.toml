@@ -17,6 +17,8 @@ dependencies = [
     "Pillow",
     "PyYAML",
     "numpy",
+    "anthropic",
+    "python-dotenv",
 ]
 
 [project.scripts]

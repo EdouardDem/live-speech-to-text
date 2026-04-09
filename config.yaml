@@ -17,3 +17,9 @@ device: "auto"
 
 # Paste method: auto (detect), xclip, xdotool, wayland.
 paste_method: "auto"
+
+# Hotkey for speech-to-text with translation (pynput format).
+translate_hotkey: "<ctrl>+<shift>+t"
+
+# Target language for translation (requires ANTHROPIC_API_KEY).
+translate_language: "English"

@@ -13,6 +13,8 @@ class Config:
     sample_rate: int = 16000
     device: str = "auto"  # auto | cpu | cuda
     paste_method: str = "auto"  # auto | xclip | xdotool | wayland
+    translate_hotkey: str = "<ctrl>+<shift>+t"
+    translate_language: str = "English"
 
     @classmethod
     def load(cls, path: str | Path | None = None) -> "Config":

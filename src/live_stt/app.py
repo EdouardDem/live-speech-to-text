@@ -7,6 +7,7 @@ from .config import Config
 from .hotkey import HotkeyListener
 from .paster import Paster
 from .transcriber import Transcriber
+from .translator import Translator
 from .tray import TrayIcon
 
 log = logging.getLogger(__name__)
@@ -26,6 +27,11 @@ class App:
         )
         self._paster = Paster(method=config.paste_method)
         self._hotkey = HotkeyListener(config.hotkey, self._toggle)
+        self._translate_hotkey = HotkeyListener(
+            config.translate_hotkey, self._translate_toggle
+        )
+        self._translator: Translator | None = None
+        self._translate_mode = False
         self._tray: TrayIcon | None = (
             TrayIcon(on_toggle=self._toggle, on_quit=self._quit)
             if use_tray
@@ -40,7 +46,9 @@ class App:
         self._transcriber.load()
 
         self._hotkey.start()
+        self._translate_hotkey.start()
         log.info("Ready — press %s to start / stop recording.", self._cfg.hotkey)
+        log.info("Press %s for speech-to-text with translation.", self._cfg.translate_hotkey)
 
         if self._tray is not None:
             signal.signal(signal.SIGINT, lambda *_: self._quit())
@@ -59,6 +67,15 @@ class App:
 
     def _toggle(self) -> None:
         with self._lock:
+            self._translate_mode = False
+            if self._recorder.is_recording:
+                self._stop_recording()
+            else:
+                self._start_recording()
+
+    def _translate_toggle(self) -> None:
+        with self._lock:
+            self._translate_mode = True
             if self._recorder.is_recording:
                 self._stop_recording()
             else:
@@ -72,17 +89,18 @@ class App:
 
     def _stop_recording(self) -> None:
         audio = self._recorder.stop()
+        translate = self._translate_mode
         if self._tray:
             self._tray.set_state("transcribing")
         duration = len(audio) / self._cfg.sample_rate if len(audio) else 0
         log.info("Stopped recording (%.1f s). Transcribing…", duration)
         threading.Thread(
             target=self._transcribe_and_paste,
-            args=(audio,),
+            args=(audio, translate),
             daemon=True,
         ).start()
 
-    def _transcribe_and_paste(self, audio) -> None:
+    def _transcribe_and_paste(self, audio, translate: bool = False) -> None:
         try:
             if len(audio) == 0:
                 log.warning("No audio captured.")
@@ -90,6 +108,12 @@ class App:
             text = self._transcriber.transcribe(audio, self._cfg.sample_rate)
             if text:
                 log.info("Transcript: %s", text)
+                if translate:
+                    if self._translator is None:
+                        self._translator = Translator()
+                    log.info("Translating to %s…", self._cfg.translate_language)
+                    text = self._translator.translate(text, self._cfg.translate_language)
+                    log.info("Translation: %s", text)
                 self._paster.paste(text)
             else:
                 log.warning("Empty transcription result.")
@@ -104,5 +128,6 @@ class App:
     def _quit(self) -> None:
         log.info("Shutting down…")
         self._hotkey.stop()
+        self._translate_hotkey.stop()
         if self._tray:
             self._tray.stop()
