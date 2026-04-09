@@ -43,6 +43,7 @@ class App:
         log.info("Ready — press %s to start / stop recording.", self._cfg.hotkey)
 
         if self._tray is not None:
+            signal.signal(signal.SIGINT, lambda *_: self._quit())
             self._tray.start()  # blocks until quit
         else:
             self._run_headless()

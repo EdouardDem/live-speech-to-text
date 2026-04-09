@@ -75,7 +75,7 @@ def main() -> None:
     try:
         app.run()
     except KeyboardInterrupt:
-        pass
+        print("\nInterrupted – shutting down.")
 
 
 if __name__ == "__main__":
