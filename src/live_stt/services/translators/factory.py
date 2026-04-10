@@ -22,4 +22,3 @@ def create_translator(provider: str, **kwargs) -> Translator:
         f"Unknown translator provider: {provider!r}. "
         f"Supported providers: anthropic, deepl."
     )
-

@@ -1,139 +1,180 @@
+"""Application — orchestrates services, GUI window, hotkeys, and tray icon."""
+
 import logging
-import signal
 import threading
 
-from .audio import AudioRecorder
-from .config import Config
-from .hotkey import HotkeyListener
-from .paster import Paster
-from .transcriber import Transcriber
-from .translators import Translator, create_translator
-from .tray import TrayIcon
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import GLib, Gtk  # noqa: E402
+
+from .gui.window import LiveSTTWindow
+from .services.audio import AudioRecorder
+from .services.config import Config
+from .services.hotkey import HotkeyListener
+from .services.paster import Paster
+from .services.transcriber import Transcriber
+from .services.translators import create_translator
+from .services.tray import TrayIcon
 
 log = logging.getLogger(__name__)
 
-
 class App:
-    """Orchestrates recording, transcription, and text insertion."""
+    """Main application — owns every service and the GTK window."""
 
-    def __init__(self, config: Config, *, use_tray: bool = True):
+    def __init__(self, config: Config):
         self._cfg = config
-        self._use_tray = use_tray
+        self._lock = threading.Lock()
+        self._model_loaded = False
+        self._translator = None
 
+        # Services
         self._recorder = AudioRecorder(sample_rate=config.sample_rate)
         self._transcriber = Transcriber(
             model_name=config.model_name,
             device=config.device,
         )
-        self._paster = Paster(method=config.paste_method, shortcut=config.paste_shortcut)
-        self._hotkey = HotkeyListener(config.hotkey, self._toggle)
+        self._paster = Paster(
+            method=config.paste_method,
+            shortcut=config.paste_shortcut,
+        )
+        self._hotkey = HotkeyListener(config.hotkey, self._on_hotkey_toggle)
         self._translate_hotkey = HotkeyListener(
-            config.translate_hotkey, self._translate_toggle
+            config.translate_hotkey, self._on_hotkey_translate_toggle
         )
-        self._translator: Translator | None = None
-        self._translate_mode = False
-        self._tray: TrayIcon | None = (
-            TrayIcon(on_toggle=self._toggle, on_quit=self._quit)
-            if use_tray
-            else None
+        self._tray = TrayIcon(
+            on_show_window=lambda: GLib.idle_add(self._show_window),
+            on_quit=lambda: GLib.idle_add(self._quit),
         )
-        self._lock = threading.Lock()
 
-    # -- lifecycle ------------------------------------------------------------
+        # Window
+        self._window = LiveSTTWindow(
+            config,
+            on_settings_saved=self._on_settings_saved,
+            on_start=lambda: self._toggle(translate=False),
+            on_translate=lambda: self._toggle(translate=True),
+        )
+
+    # -- Lifecycle ------------------------------------------------------------
 
     def run(self) -> None:
-        log.info("Loading transcription model (this may take a moment)…")
-        self._transcriber.load()
-
+        self._tray.start()
         self._hotkey.start()
         self._translate_hotkey.start()
-        log.info("Ready — press %s to start / stop recording.", self._cfg.hotkey)
-        log.info("Press %s for speech-to-text with translation.", self._cfg.translate_hotkey)
+        log.info("Hotkeys active: %s / %s", self._cfg.hotkey, self._cfg.translate_hotkey)
+        self._window.show_all()
+        threading.Thread(target=self._load_model, daemon=True).start()
+        Gtk.main()
 
-        if self._tray is not None:
-            signal.signal(signal.SIGINT, lambda *_: self._quit())
-            self._tray.start()  # blocks until quit
-        else:
-            self._run_headless()
+    def _load_model(self) -> None:
+        try:
+            self._transcriber.load()
+            self._model_loaded = True
+            GLib.idle_add(self._window.main_tab.set_status, "Ready")
+            GLib.idle_add(self._window.main_tab.set_buttons_sensitive, True)
+        except Exception:
+            log.exception("Failed to load model")
+            GLib.idle_add(self._window.main_tab.set_status, "Error loading model")
 
-    def _run_headless(self) -> None:
-        stop_event = threading.Event()
-        signal.signal(signal.SIGINT, lambda *_: stop_event.set())
-        signal.signal(signal.SIGTERM, lambda *_: stop_event.set())
-        stop_event.wait()
-        self._quit()
+    def _show_window(self) -> None:
+        self._window.present()
 
-    # -- toggle logic ---------------------------------------------------------
+    def _quit(self) -> None:
+        log.info("Shutting down…")
+        if self._recorder.is_recording:
+            self._recorder.stop()
+        self._hotkey.stop()
+        self._translate_hotkey.stop()
+        self._tray.stop()
+        Gtk.main_quit()
 
-    def _toggle(self) -> None:
+    # -- Hotkey callbacks (pynput thread → GTK thread) ------------------------
+
+    def _on_hotkey_toggle(self) -> None:
+        GLib.idle_add(self._toggle, False)
+
+    def _on_hotkey_translate_toggle(self) -> None:
+        GLib.idle_add(self._toggle, True)
+
+    # -- Recording toggle -----------------------------------------------------
+
+    def _toggle(self, translate: bool) -> None:
         with self._lock:
-            self._translate_mode = False
+            if not self._model_loaded:
+                return
             if self._recorder.is_recording:
-                self._stop_recording()
+                self._stop_and_process(translate)
             else:
-                self._start_recording()
+                self._start_recording(translate)
 
-    def _translate_toggle(self) -> None:
-        with self._lock:
-            self._translate_mode = True
-            if self._recorder.is_recording:
-                self._stop_recording()
-            else:
-                self._start_recording()
-
-    def _start_recording(self) -> None:
+    def _start_recording(self, translate: bool) -> None:
         self._recorder.start()
-        if self._tray:
-            self._tray.set_state("recording")
-        log.info("Recording…")
+        self._window.main_tab.set_recording_state(True, translate)
+        self._window.main_tab.set_status("Recording…")
+        self._tray.set_state("recording")
 
-    def _stop_recording(self) -> None:
+    def _stop_and_process(self, translate: bool) -> None:
         audio = self._recorder.stop()
-        translate = self._translate_mode
-        if self._tray:
-            self._tray.set_state("transcribing")
-        duration = len(audio) / self._cfg.sample_rate if len(audio) else 0
-        log.info("Stopped recording (%.1f s). Transcribing…", duration)
+        self._window.main_tab.set_recording_state(False, translate)
+        self._window.main_tab.set_buttons_sensitive(False)
+        self._window.main_tab.set_status("Transcribing…")
+        self._tray.set_state("transcribing")
         threading.Thread(
             target=self._transcribe_and_paste,
             args=(audio, translate),
             daemon=True,
         ).start()
 
-    def _transcribe_and_paste(self, audio, translate: bool = False) -> None:
+    def _transcribe_and_paste(self, audio, translate: bool) -> None:
         try:
             if len(audio) == 0:
-                log.warning("No audio captured.")
+                GLib.idle_add(self._window.main_tab.set_status, "No audio captured")
                 return
+
             text = self._transcriber.transcribe(audio, self._cfg.sample_rate)
-            if text:
-                log.info("Transcript: %s", text)
-                if translate:
-                    if self._tray:
-                        self._tray.set_state("translating")
-                    if self._translator is None:
-                        self._translator = create_translator(
-                            provider=self._cfg.translate_provider,
-                            model=self._cfg.translate_model,
-                            max_tokens=self._cfg.translate_max_tokens,
-                        )
-                    log.info("Translating to %s…", self._cfg.translate_language)
-                    text = self._translator.translate(text, self._cfg.translate_language)
-                    log.info("Translation: %s", text)
-                self._paster.paste(text)
-            else:
-                log.warning("Empty transcription result.")
+            if not text:
+                GLib.idle_add(self._window.main_tab.set_status, "Empty transcription")
+                return
+
+            GLib.idle_add(self._window.main_tab.append_text, text)
+
+            if translate:
+                GLib.idle_add(self._window.main_tab.set_status, "Translating…")
+                GLib.idle_add(self._tray.set_state, "translating")
+                if self._translator is None:
+                    self._translator = create_translator(
+                        provider=self._cfg.translate_provider,
+                        model=self._cfg.translate_model,
+                        max_tokens=self._cfg.translate_max_tokens,
+                    )
+                translated = self._translator.translate(text, self._cfg.translate_language)
+                GLib.idle_add(self._window.main_tab.append_text, f"  → {translated}")
+                text = translated
+
+            self._paster.paste(text)
+            GLib.idle_add(self._window.main_tab.set_status, "Ready")
         except Exception:
             log.exception("Transcription / paste failed")
+            GLib.idle_add(self._window.main_tab.set_status, "Error — see logs")
         finally:
-            if self._tray:
-                self._tray.set_state("idle")
+            GLib.idle_add(self._window.main_tab.set_buttons_sensitive, True)
+            GLib.idle_add(self._tray.set_state, "idle")
 
-    # -- shutdown -------------------------------------------------------------
+    # -- Settings -------------------------------------------------------------
 
-    def _quit(self) -> None:
-        log.info("Shutting down…")
+    def _on_settings_saved(self) -> None:
+        self._paster = Paster(
+            method=self._cfg.paste_method,
+            shortcut=self._cfg.paste_shortcut,
+        )
+        self._translator = None
+        # Restart hotkeys with new bindings
         self._hotkey.stop()
         self._translate_hotkey.stop()
-        if self._tray:
-            self._tray.stop()
+        self._hotkey = HotkeyListener(self._cfg.hotkey, self._on_hotkey_toggle)
+        self._translate_hotkey = HotkeyListener(
+            self._cfg.translate_hotkey, self._on_hotkey_translate_toggle
+        )
+        self._hotkey.start()
+        self._translate_hotkey.start()
+        self._window.main_tab.set_status("Settings saved")

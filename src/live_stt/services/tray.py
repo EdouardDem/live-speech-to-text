@@ -1,4 +1,7 @@
+"""System tray icon running in a background thread alongside GTK."""
+
 import logging
+import threading
 
 import pystray
 from PIL import Image, ImageDraw
@@ -13,10 +16,10 @@ _COLORS = {
 }
 
 _TITLES = {
-    "idle": "Live STT - Idle",
-    "recording": "Live STT - Recording...",
-    "transcribing": "Live STT - Transcribing...",
-    "translating": "Live STT - Translating...",
+    "idle": "Live STT — Idle",
+    "recording": "Live STT — Recording…",
+    "transcribing": "Live STT — Transcribing…",
+    "translating": "Live STT — Translating…",
 }
 
 
@@ -29,21 +32,25 @@ def _make_icon(state: str) -> Image.Image:
     color = _COLORS.get(state, _COLORS["idle"])
     draw.ellipse([margin, margin, size - margin, size - margin], fill=color)
     if state == "recording":
-        draw.ellipse([recording_margin, recording_margin, size - recording_margin, size - recording_margin], fill="#ffffff")
+        draw.ellipse(
+            [recording_margin, recording_margin, size - recording_margin, size - recording_margin],
+            fill="#ffffff",
+        )
     return img
 
 
 class TrayIcon:
-    """System-tray indicator with toggle / quit menu."""
+    """System tray icon with show-window and quit actions."""
 
-    def __init__(self, on_toggle, on_quit):
-        self._on_toggle = on_toggle
+    def __init__(self, on_show_window, on_quit):
+        self._on_show_window = on_show_window
         self._on_quit = on_quit
         self._icon: pystray.Icon | None = None
+        self._thread: threading.Thread | None = None
 
     def start(self) -> None:
         menu = pystray.Menu(
-            pystray.MenuItem("Toggle recording", lambda _i, _it: self._on_toggle()),
+            pystray.MenuItem("Show", lambda _i, _it: self._on_show_window(), default=True),
             pystray.MenuItem("Quit", lambda _i, _it: self._on_quit()),
         )
         self._icon = pystray.Icon(
@@ -52,8 +59,9 @@ class TrayIcon:
             _TITLES["idle"],
             menu,
         )
+        self._thread = threading.Thread(target=self._icon.run, daemon=True)
+        self._thread.start()
         log.info("System tray icon ready.")
-        self._icon.run()  # blocks until stop()
 
     def set_state(self, state: str) -> None:
         if self._icon is not None:
@@ -63,3 +71,4 @@ class TrayIcon:
     def stop(self) -> None:
         if self._icon is not None:
             self._icon.stop()
+            self._icon = None
