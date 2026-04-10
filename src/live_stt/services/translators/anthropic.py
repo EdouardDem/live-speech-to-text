@@ -1,7 +1,6 @@
 import os
 
 import anthropic
-from dotenv import load_dotenv
 
 from .. import logger
 from .base import Translator
@@ -12,15 +11,14 @@ log = logger.get(__name__)
 class AnthropicTranslator(Translator):
     """Translation backend using the Anthropic (Claude) API."""
 
-    def __init__(self, model: str, max_tokens: int):
-        load_dotenv()
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
+    def __init__(self, model: str, max_tokens: int, api_key: str = ""):
+        key = api_key or os.getenv("ANTHROPIC_API_KEY", "")
+        if not key:
             raise ValueError(
-                "ANTHROPIC_API_KEY not set. "
-                "Set it in environment or in a .env file."
+                "Anthropic API key not configured. "
+                "Set it in Settings or via the ANTHROPIC_API_KEY environment variable."
             )
-        self._client = anthropic.Anthropic(api_key=api_key)
+        self._client = anthropic.Anthropic(api_key=key)
         self._model = model
         self._max_tokens = max_tokens
 

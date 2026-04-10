@@ -154,12 +154,7 @@ class App:
             if translate:
                 GLib.idle_add(self._window.main_tab.set_status, "Translating…")
                 GLib.idle_add(self._tray.set_state, "translating")
-                if self._translator is None:
-                    self._translator = create_translator(
-                        provider=self._cfg.translate_provider,
-                        model=self._cfg.translate_model,
-                        max_tokens=self._cfg.translate_max_tokens,
-                    )
+                self._initialize_translator()
                 translated = self._translator.translate(text, self._cfg.translate_language)
                 GLib.idle_add(
                     self._window.main_tab.append_entry, translated, "translation"
@@ -175,7 +170,28 @@ class App:
             GLib.idle_add(self._window.main_tab.set_buttons_sensitive, True)
             GLib.idle_add(self._tray.set_state, "idle")
 
+    def _get_translator_api_key(self) -> str:
+        if self._cfg.translate_provider == "anthropic":
+            return self._cfg.anthropic_api_key
+        elif self._cfg.translate_provider == "deepl":
+            return self._cfg.deepl_api_key
+        else:
+            raise ValueError(f"Invalid translator provider: {self._cfg.translate_provider}")
+
+    def _create_translator(self) -> None:
+        return create_translator(
+            provider=self._cfg.translate_provider,
+            model=self._cfg.translate_model,
+            max_tokens=self._cfg.translate_max_tokens,
+            api_key=self._get_translator_api_key(),
+        )
+
+    def _initialize_translator(self) -> None:
+        if self._translator is None:
+            self._translator = self._create_translator()
+
     # -- Settings -------------------------------------------------------------
+
 
     def _on_settings_saved(self) -> None:
         self._paster = Paster(
