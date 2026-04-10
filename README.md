@@ -1,7 +1,8 @@
 # Live Speech-to-Text
 
 A lightweight Linux daemon that records speech from your microphone and inserts
-the transcript into the currently focused text field, powered by
+the transcript into the currently focused text field, with optional on-the-fly
+translation. Powered by
 [NVIDIA Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3).
 
 ## How it works
