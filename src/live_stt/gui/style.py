@@ -10,7 +10,7 @@ CSS = b"""
     font-size: 14px;
     font-weight: bold;
 }
-#btn-start {
+#btn-transcribe {
     min-height: 48px;
     font-size: 15px;
 }
