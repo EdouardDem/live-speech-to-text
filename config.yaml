@@ -25,7 +25,7 @@ translate_hotkey: "<ctrl>+<shift>+t"
 translate_language: "English"
 
 # Claude model for translation.
-translate_model: "claude-3-5-haiku-latest"
+translate_model: "claude-haiku-4-5-20251001"
 
 # Max tokens for translation response.
 translate_max_tokens: 1024

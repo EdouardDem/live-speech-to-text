@@ -61,7 +61,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--translate-model",
-        help="Claude model for translation (default: claude-3-5-haiku-latest)",
+        help="Claude model for translation (default: claude-haiku-4-5-20251001)",
     )
     parser.add_argument(
         "--translate-max-tokens",

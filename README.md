@@ -151,7 +151,7 @@ Settings can also be set via CLI flags (see `live-stt --help`).
 | `paste_method`       | `auto`                        | `auto`, `xclip`, `xdotool`, `wayland` |
 | `translate_hotkey`   | `<ctrl>+<shift>+t`            | Hotkey for speech-to-text + translate |
 | `translate_language` | `English`                     | Target language for translation       |
-| `translate_model`    | `claude-3-5-haiku-latest`     | Claude model for translation          |
+| `translate_model`    | `claude-haiku-4-5-20251001`     | Claude model for translation          |
 | `translate_max_tokens` | `1024`                      | Max tokens for translation response   |
 
 
