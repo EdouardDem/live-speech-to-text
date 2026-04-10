@@ -72,21 +72,26 @@ def capture_nemo_logs() -> None:
     Must be called **before** any NeMo operation that produces log output
     (e.g. model loading).
     """
-    # Importing nemo.utils triggers the singleton Logger which creates
-    # the "nemo_logger" Python logger with its own stream handlers.
-    import nemo.utils  # noqa: F401
+    try:
+        # Importing nemo.utils triggers the singleton Logger which creates
+        # the "nemo_logger" Python logger with its own stream handlers.
+        import nemo.utils  # noqa: F401
 
-    nemo_logger = logging.getLogger("nemo_logger")
-    # Remove NeMo's stdout/stderr stream handlers
-    for handler in list(nemo_logger.handlers):
-        if isinstance(handler, logging.StreamHandler) and not isinstance(
-            handler, (logging.FileHandler, logging.handlers.MemoryHandler)
-        ):
-            nemo_logger.removeHandler(handler)
-    # Add our handler for the Model Logs tab
-    model_handler = _ModelGuiHandler()
-    model_handler.setFormatter(_formatter)
-    nemo_logger.addHandler(model_handler)
+        nemo_logger = logging.getLogger("nemo_logger")
+        # Remove NeMo's stdout/stderr stream handlers
+        for handler in list(nemo_logger.handlers):
+            if isinstance(handler, logging.StreamHandler) and not isinstance(
+                handler, (logging.FileHandler, logging.handlers.MemoryHandler)
+            ):
+                nemo_logger.removeHandler(handler)
+        # Add our handler for the Model Logs tab
+        model_handler = _ModelGuiHandler()
+        model_handler.setFormatter(_formatter)
+        nemo_logger.addHandler(model_handler)
+    except Exception:
+        logging.getLogger(__name__).warning(
+            "Failed to capture NeMo logs — model output will remain on console"
+        )
 
 
 def set_gui_callback(callback: Callable[[str], None]) -> None:
