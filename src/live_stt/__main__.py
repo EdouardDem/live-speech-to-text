@@ -52,6 +52,10 @@ def main() -> None:
         help="Run without system-tray icon (headless mode)",
     )
     parser.add_argument(
+        "--paste-shortcut",
+        help="Keyboard shortcut for pasting (e.g. 'ctrl+v', 'ctrl+shift+v')",
+    )
+    parser.add_argument(
         "--translate-hotkey",
         help="Override translation hotkey (pynput format, e.g. '<ctrl>+<shift>+t')",
     )
@@ -91,6 +95,8 @@ def main() -> None:
         config.model_name = args.model
     if args.device:
         config.device = args.device
+    if args.paste_shortcut:
+        config.paste_shortcut = args.paste_shortcut
     if args.translate_hotkey:
         config.translate_hotkey = args.translate_hotkey
     if args.translate_language:

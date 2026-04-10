@@ -25,7 +25,7 @@ class App:
             model_name=config.model_name,
             device=config.device,
         )
-        self._paster = Paster(method=config.paste_method)
+        self._paster = Paster(method=config.paste_method, shortcut=config.paste_shortcut)
         self._hotkey = HotkeyListener(config.hotkey, self._toggle)
         self._translate_hotkey = HotkeyListener(
             config.translate_hotkey, self._translate_toggle

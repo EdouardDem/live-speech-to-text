@@ -140,6 +140,9 @@ live-stt --translate-hotkey '<ctrl>+<alt>+t'
 
 # Set target language for translation
 live-stt --translate-language French
+
+# Use Ctrl+V for pasting (default is Ctrl+Shift+V for terminal compatibility)
+live-stt --paste-shortcut 'ctrl+v'
 ```
 
 You can also run it as a module:
@@ -167,6 +170,7 @@ Settings can also be set via CLI flags (see `live-stt --help`).
 | `sample_rate`        | `16000`                       | Mic sample rate in Hz                 |
 | `device`             | `auto`                        | `auto`, `cpu`, or `cuda`              |
 | `paste_method`       | `auto`                        | `auto`, `xclip`, `xdotool`, `wayland` |
+| `paste_shortcut`     | `ctrl+shift+v`                | Keyboard shortcut for pasting (`ctrl+v`, `ctrl+shift+v`, …) |
 | `translate_hotkey`   | `<ctrl>+<shift>+t`            | Hotkey for speech-to-text + translate        |
 | `translate_language` | `English`                     | Target language for translation              |
 | `translate_provider` | `anthropic`                   | Translation backend (`anthropic`, `deepl`)   |

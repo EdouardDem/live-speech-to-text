@@ -13,6 +13,7 @@ class Config:
     sample_rate: int = 16000
     device: str = "auto"  # auto | cpu | cuda
     paste_method: str = "auto"  # auto | xclip | xdotool | wayland
+    paste_shortcut: str = "ctrl+shift+v"  # keyboard shortcut used to paste (e.g. ctrl+v, ctrl+shift+v)
     translate_hotkey: str = "<ctrl>+<shift>+t"
     translate_language: str = "English"
     translate_provider: str = "anthropic"

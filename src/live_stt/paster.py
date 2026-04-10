@@ -13,9 +13,10 @@ class Paster:
     Supports X11 (xclip + xdotool) and Wayland (wl-copy + wtype) backends.
     """
 
-    def __init__(self, method: str = "auto"):
+    def __init__(self, method: str = "auto", shortcut: str = "ctrl+shift+v"):
         self._method = self._resolve(method)
-        log.info("Paste backend: %s", self._method)
+        self._shortcut = shortcut
+        log.info("Paste backend: %s (shortcut: %s)", self._method, self._shortcut)
 
     # -- public ---------------------------------------------------------------
 
@@ -51,9 +52,8 @@ class Paster:
 
     # -- backends -------------------------------------------------------------
 
-    @staticmethod
-    def _paste_xclip(text: str) -> None:
-        """Copy to clipboard via xclip, then simulate Ctrl+V."""
+    def _paste_xclip(self, text: str) -> None:
+        """Copy to clipboard via xclip, then simulate paste shortcut."""
         proc = subprocess.Popen(
             ["xclip", "-selection", "clipboard"],
             stdin=subprocess.PIPE,
@@ -61,7 +61,7 @@ class Paster:
         proc.communicate(text.encode())
         time.sleep(0.05)
         subprocess.run(
-            ["xdotool", "key", "--clearmodifiers", "ctrl+v"],
+            ["xdotool", "key", "--clearmodifiers", self._shortcut],
             check=True,
         )
 
@@ -73,12 +73,18 @@ class Paster:
             check=True,
         )
 
-    @staticmethod
-    def _paste_wayland(text: str) -> None:
-        """Copy via wl-copy, then simulate Ctrl+V via wtype."""
+    def _paste_wayland(self, text: str) -> None:
+        """Copy via wl-copy, then simulate paste shortcut via wtype."""
         subprocess.run(["wl-copy", "--", text], check=True)
         time.sleep(0.05)
-        subprocess.run(
-            ["wtype", "-M", "ctrl", "v", "-m", "ctrl"],
-            check=True,
-        )
+        # Build wtype args from shortcut (e.g. "ctrl+shift+v")
+        parts = self._shortcut.split("+")
+        key = parts[-1]
+        modifiers = parts[:-1]
+        wtype_args = ["wtype"]
+        for mod in modifiers:
+            wtype_args += ["-M", mod]
+        wtype_args.append(key)
+        for mod in reversed(modifiers):
+            wtype_args += ["-m", mod]
+        subprocess.run(wtype_args, check=True)
