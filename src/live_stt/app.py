@@ -58,7 +58,7 @@ class App:
 
         # Connect logger to the GUI log tab
         logger.set_gui_callback(
-            lambda msg: GLib.idle_add(self._window.log_tab.append, msg)
+            lambda msg: GLib.idle_add(self._window.logs_tab.append, msg)
         )
 
     # -- Lifecycle ------------------------------------------------------------
