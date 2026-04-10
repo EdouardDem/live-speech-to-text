@@ -11,18 +11,62 @@ from ..services.config import Config
 
 log = logging.getLogger(__name__)
 
-_SETTINGS_SPEC = [
+_GENERAL_SPEC = [
     ("hotkey", "Hotkey", "entry"),
     ("model_name", "Model", "entry"),
     ("device", "Device", "combo", ["auto", "cpu", "cuda"]),
     ("paste_method", "Paste method", "combo", ["auto", "xclip", "xdotool", "wayland"]),
     ("paste_shortcut", "Paste shortcut", "entry"),
-    ("translate_hotkey", "Translate hotkey", "entry"),
-    ("translate_language", "Translate language", "entry"),
-    ("translate_provider", "Translate provider", "combo", ["anthropic", "deepl"]),
-    ("translate_model", "Translate model", "entry"),
+]
+
+_TRANSLATION_SPEC = [
+    ("translate_hotkey", "Hotkey", "entry"),
+    ("translate_language", "Language", "entry"),
+    ("translate_provider", "Provider", "combo", ["anthropic", "deepl"]),
+    ("translate_model", "Model", "entry"),
     ("translate_max_tokens", "Max tokens", "entry"),
 ]
+
+
+def _build_section(title: str, specs: list, config: Config, entries: dict) -> Gtk.Frame:
+    frame = Gtk.Frame(label=title)
+    frame.set_shadow_type(Gtk.ShadowType.NONE)
+    frame.set_label_align(0.0, 0.5)
+
+    grid = Gtk.Grid()
+    grid.set_column_spacing(12)
+    grid.set_row_spacing(8)
+    grid.set_margin_top(8)
+    grid.set_margin_bottom(8)
+    grid.set_margin_start(12)
+    grid.set_margin_end(12)
+
+    for row, item in enumerate(specs):
+        key, label_text, kind = item[0], item[1], item[2]
+        label = Gtk.Label(label=label_text, xalign=0)
+        grid.attach(label, 0, row, 1, 1)
+
+        current_value = str(getattr(config, key))
+
+        if kind == "combo":
+            combo = Gtk.ComboBoxText()
+            for opt in item[3]:
+                combo.append_text(opt)
+            combo.set_active(
+                item[3].index(current_value) if current_value in item[3] else 0
+            )
+            combo.set_hexpand(True)
+            grid.attach(combo, 1, row, 1, 1)
+            entries[key] = combo
+        else:
+            entry = Gtk.Entry()
+            entry.set_text(current_value)
+            entry.set_hexpand(True)
+            grid.attach(entry, 1, row, 1, 1)
+            entries[key] = entry
+
+    frame.add(grid)
+    return frame
 
 
 class SettingsTab(Gtk.ScrolledWindow):
@@ -34,43 +78,26 @@ class SettingsTab(Gtk.ScrolledWindow):
         self._on_save = on_save
         self._entries: dict[str, Gtk.Entry | Gtk.ComboBoxText] = {}
 
-        grid = Gtk.Grid()
-        grid.set_column_spacing(12)
-        grid.set_row_spacing(8)
-        grid.set_margin_top(16)
-        grid.set_margin_bottom(16)
-        grid.set_margin_start(16)
-        grid.set_margin_end(16)
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        box.set_margin_top(16)
+        box.set_margin_bottom(16)
+        box.set_margin_start(16)
+        box.set_margin_end(16)
 
-        for row, item in enumerate(_SETTINGS_SPEC):
-            key, label_text, kind = item[0], item[1], item[2]
-            label = Gtk.Label(label=label_text, xalign=0)
-            grid.attach(label, 0, row, 1, 1)
-
-            current_value = str(getattr(self._cfg, key))
-
-            if kind == "combo":
-                combo = Gtk.ComboBoxText()
-                for opt in item[3]:
-                    combo.append_text(opt)
-                combo.set_active(
-                    item[3].index(current_value) if current_value in item[3] else 0
-                )
-                combo.set_hexpand(True)
-                grid.attach(combo, 1, row, 1, 1)
-                self._entries[key] = combo
-            else:
-                entry = Gtk.Entry()
-                entry.set_text(current_value)
-                entry.set_hexpand(True)
-                grid.attach(entry, 1, row, 1, 1)
-                self._entries[key] = entry
+        box.pack_start(
+            _build_section("General", _GENERAL_SPEC, config, self._entries),
+            False, False, 0,
+        )
+        box.pack_start(
+            _build_section("Translation", _TRANSLATION_SPEC, config, self._entries),
+            False, False, 0,
+        )
 
         save_btn = Gtk.Button(label="Save settings")
         save_btn.connect("clicked", self._on_save_clicked)
-        grid.attach(save_btn, 0, len(_SETTINGS_SPEC), 2, 1)
+        box.pack_start(save_btn, False, False, 0)
 
-        self.add(grid)
+        self.add(box)
 
     def _on_save_clicked(self, _btn: Gtk.Button) -> None:
         for key, widget in self._entries.items():
