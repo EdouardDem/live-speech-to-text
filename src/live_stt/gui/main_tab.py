@@ -6,6 +6,9 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk  # noqa: E402
 
 
+_BTN_START_LABEL = "Transcribe"
+_BTN_TRANSLATE_LABEL = "Translate"
+
 class MainTab(Gtk.Box):
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
@@ -34,11 +37,11 @@ class MainTab(Gtk.Box):
         btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         btn_box.set_homogeneous(True)
 
-        self.btn_start = Gtk.Button(label="Start")
-        self.btn_start.set_name("btn-start")
+        self.btn_start = Gtk.Button(label=_BTN_START_LABEL)
+        self.btn_start.set_name("btn-transcribe")
         btn_box.pack_start(self.btn_start, True, True, 0)
 
-        self.btn_translate = Gtk.Button(label="Start + Translate")
+        self.btn_translate = Gtk.Button(label=_BTN_TRANSLATE_LABEL)
         self.btn_translate.set_name("btn-translate")
         btn_box.pack_start(self.btn_translate, True, True, 0)
 
@@ -53,11 +56,11 @@ class MainTab(Gtk.Box):
 
     def set_recording_state(self, recording: bool, translate: bool) -> None:
         if recording:
-            self.btn_start.set_label("Stop" if not translate else "Start")
-            self.btn_translate.set_label("Stop" if translate else "Start + Translate")
+            self.btn_start.set_label("Stop" if not translate else _BTN_START_LABEL)
+            self.btn_translate.set_label("Stop" if translate else _BTN_TRANSLATE_LABEL)
         else:
-            self.btn_start.set_label("Start")
-            self.btn_translate.set_label("Start + Translate")
+            self.btn_start.set_label(_BTN_START_LABEL)
+            self.btn_translate.set_label(_BTN_TRANSLATE_LABEL)
 
     def append_text(self, text: str) -> None:
         buf = self.text_view.get_buffer()
