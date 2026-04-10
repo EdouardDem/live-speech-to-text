@@ -7,6 +7,8 @@ from . import logger
 
 log = logger.get(__name__)
 
+_PRE_PASTE_DELAY = 0.05
+_POST_PASTE_DELAY = 0.15
 
 class Paster:
     """Inserts text into the currently focused input field.
@@ -81,13 +83,13 @@ class Paster:
         """Copy to clipboard via xclip, then simulate paste shortcut."""
         saved = self._get_clipboard_xclip()
         self._set_clipboard_xclip(text.encode())
-        time.sleep(0.05)
+        time.sleep(_PRE_PASTE_DELAY)
         subprocess.run(
             ["xdotool", "key", "--clearmodifiers", self._shortcut],
             check=True,
         )
         if saved is not None:
-            time.sleep(0.15)
+            time.sleep(_POST_PASTE_DELAY)
             self._set_clipboard_xclip(saved)
 
     @staticmethod
@@ -117,7 +119,7 @@ class Paster:
         """Copy via wl-copy, then simulate paste shortcut via wtype."""
         saved = self._get_clipboard_wayland()
         subprocess.run(["wl-copy", "--", text], check=True)
-        time.sleep(0.05)
+        time.sleep(_PRE_PASTE_DELAY)
         # Build wtype args from shortcut (e.g. "ctrl+shift+v")
         parts = self._shortcut.split("+")
         key = parts[-1]
@@ -130,5 +132,5 @@ class Paster:
             wtype_args += ["-m", mod]
         subprocess.run(wtype_args, check=True)
         if saved is not None:
-            time.sleep(0.15)
+            time.sleep(_POST_PASTE_DELAY)
             subprocess.run(["wl-copy", "--", saved], check=True)
