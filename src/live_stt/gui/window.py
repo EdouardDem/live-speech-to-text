@@ -6,7 +6,7 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk  # noqa: E402
 
 from ..services.config import Config
-from .log_tab import LogTab
+from .logs_tab import LogsTab
 from .main_tab import MainTab
 from .settings_tab import SettingsTab
 from .style import apply_css
@@ -34,8 +34,8 @@ class LiveSTTWindow(Gtk.Window):
         self.settings_tab = SettingsTab(config, on_save=on_settings_saved)
         notebook.append_page(self.settings_tab, Gtk.Label(label="Settings"))
 
-        self.log_tab = LogTab()
-        notebook.append_page(self.log_tab, Gtk.Label(label="Log"))
+        self.logs_tab = LogsTab()
+        notebook.append_page(self.logs_tab, Gtk.Label(label="Logs"))
 
         # Initial state
         self.main_tab.set_status("Loading model…")
