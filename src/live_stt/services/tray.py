@@ -1,12 +1,13 @@
 """System tray icon running in a background thread alongside GTK."""
 
-import logging
 import threading
 
 import pystray
 from PIL import Image, ImageDraw
 
-log = logging.getLogger(__name__)
+from . import logger
+
+log = logger.get(__name__)
 
 _COLORS = {
     "idle": "#888888",

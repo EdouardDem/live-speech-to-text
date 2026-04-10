@@ -1,15 +1,14 @@
 """Settings tab — edit and persist configuration."""
 
-import logging
-
 import gi
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk  # noqa: E402
 
 from ..services.config import Config
+from ..services import logger
 
-log = logging.getLogger(__name__)
+log = logger.get(__name__)
 
 _GENERAL_SPEC = [
     ("hotkey", "Hotkey", "entry"),
@@ -17,6 +16,7 @@ _GENERAL_SPEC = [
     ("device", "Device", "combo", ["auto", "cpu", "cuda"]),
     ("paste_method", "Paste method", "combo", ["auto", "xclip", "xdotool", "wayland"]),
     ("paste_shortcut", "Paste shortcut", "entry"),
+    ("log_to_console", "Output logs to console", "toggle"),
 ]
 
 _TRANSLATION_SPEC = [
@@ -58,6 +58,12 @@ def _build_section(title: str, specs: list, config: Config, entries: dict) -> Gt
             combo.set_hexpand(True)
             grid.attach(combo, 1, row, 1, 1)
             entries[key] = combo
+        elif kind == "toggle":
+            switch = Gtk.Switch()
+            switch.set_active(getattr(config, key) is True)
+            switch.set_halign(Gtk.Align.START)
+            grid.attach(switch, 1, row, 1, 1)
+            entries[key] = switch
         else:
             entry = Gtk.Entry()
             entry.set_text(current_value)
@@ -101,6 +107,10 @@ class SettingsTab(Gtk.ScrolledWindow):
 
     def _on_save_clicked(self, _btn: Gtk.Button) -> None:
         for key, widget in self._entries.items():
+            if isinstance(widget, Gtk.Switch):
+                setattr(self._cfg, key, widget.get_active())
+                continue
+
             if isinstance(widget, Gtk.ComboBoxText):
                 value = widget.get_active_text()
             else:
