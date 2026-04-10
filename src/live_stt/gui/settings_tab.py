@@ -15,7 +15,7 @@ _GENERAL_SPEC = [
     ("model_name", "Model", "entry"),
     ("device", "Device", "combo", ["auto", "cpu", "cuda"]),
     ("paste_method", "Paste method", "combo", ["auto", "xclip", "xdotool", "wayland"]),
-    ("paste_shortcut", "Paste shortcut", "entry"),
+    ("paste_shortcut", "Paste shortcut", "combo", ["ctrl+shift+v", "ctrl+v"]),
     ("log_to_console", "Output logs to console", "toggle"),
 ]
 
