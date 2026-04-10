@@ -27,6 +27,8 @@ _TRANSLATION_SPEC = [
     ("translate_provider", "Provider", "combo", ["anthropic", "deepl"]),
     ("translate_model", "Model", "entry"),
     ("translate_max_tokens", "Max tokens", "entry"),
+    ("anthropic_api_key", "Anthropic API key", "password"),
+    ("deepl_api_key", "DeepL API key", "password"),
 ]
 
 
@@ -60,6 +62,14 @@ def _build_section(title: str, specs: list, config: Config, entries: dict) -> Gt
             combo.set_hexpand(True)
             grid.attach(combo, 1, row, 1, 1)
             entries[key] = combo
+        elif kind == "password":
+            entry = Gtk.Entry()
+            entry.set_text(current_value)
+            entry.set_visibility(False)
+            entry.set_invisible_char('\u2022')
+            entry.set_hexpand(True)
+            grid.attach(entry, 1, row, 1, 1)
+            entries[key] = entry
         elif kind == "toggle":
             switch = Gtk.Switch()
             switch.set_active(getattr(config, key) is True)

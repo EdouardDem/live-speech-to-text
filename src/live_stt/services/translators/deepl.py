@@ -1,7 +1,6 @@
 import os
 
 import deepl
-from dotenv import load_dotenv
 
 from .. import logger
 from .base import Translator
@@ -60,15 +59,14 @@ def _resolve_language_code(target_language: str) -> str:
 class DeepLTranslator(Translator):
     """Translation backend using the DeepL API."""
 
-    def __init__(self, **_kwargs):
-        load_dotenv()
-        api_key = os.getenv("DEEPL_API_KEY")
-        if not api_key:
+    def __init__(self, api_key: str = "", **_kwargs):
+        key = api_key or os.getenv("DEEPL_API_KEY", "")
+        if not key:
             raise ValueError(
-                "DEEPL_API_KEY not set. "
-                "Set it in environment or in a .env file."
+                "DeepL API key not configured. "
+                "Set it in Settings or via the DEEPL_API_KEY environment variable."
             )
-        self._translator = deepl.Translator(api_key)
+        self._translator = deepl.Translator(key)
 
     def translate(self, text: str, target_language: str) -> str:
         lang_code = _resolve_language_code(target_language)

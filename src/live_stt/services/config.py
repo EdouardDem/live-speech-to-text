@@ -1,9 +1,15 @@
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 
 import yaml
 
+from . import keystore
+
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "live-stt" / "config.yaml"
+
+# Fields whose values are stored encrypted in the YAML file.
+_ENCRYPTED_FIELDS = {"anthropic_api_key", "deepl_api_key"}
+
 
 @dataclass
 class Config:
@@ -12,13 +18,15 @@ class Config:
     sample_rate: int = 16000
     device: str = "auto"  # auto | cpu | cuda
     paste_method: str = "auto"  # auto | xclip | xdotool | wayland
-    paste_shortcut: str = "ctrl+shift+v"  # keyboard shortcut used to paste (e.g. ctrl+v, ctrl+shift+v)
+    paste_shortcut: str = "ctrl+shift+v"
     translate_hotkey: str = "<ctrl>+<shift>+t"
     translate_language: str = "English"
     translate_provider: str = "anthropic"
     translate_model: str = "claude-haiku-4-5-20251001"
     translate_max_tokens: int = 1024
     log_to_console: bool = False
+    anthropic_api_key: str = ""
+    deepl_api_key: str = ""
 
     @classmethod
     def load(cls, path: str | Path | None = None) -> "Config":
@@ -26,10 +34,20 @@ class Config:
         if p.exists():
             data = yaml.safe_load(p.read_text()) or {}
             valid_keys = {f.name for f in fields(cls)}
-            return cls(**{k: v for k, v in data.items() if k in valid_keys})
+            filtered = {k: v for k, v in data.items() if k in valid_keys}
+            # Decrypt encrypted fields
+            for key in _ENCRYPTED_FIELDS:
+                if key in filtered and filtered[key]:
+                    filtered[key] = keystore.decrypt(filtered[key])
+            return cls(**filtered)
         return cls()
 
     def save(self, path: str | Path | None = None) -> None:
         p = Path(path) if path else DEFAULT_CONFIG_PATH
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(yaml.dump(asdict(self), default_flow_style=False, sort_keys=False))
+        data = asdict(self)
+        # Encrypt sensitive fields before writing
+        for key in _ENCRYPTED_FIELDS:
+            if data.get(key):
+                data[key] = keystore.encrypt(data[key])
+        p.write_text(yaml.dump(data, default_flow_style=False, sort_keys=False))
