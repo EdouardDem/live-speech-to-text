@@ -47,6 +47,11 @@ def main() -> None:
         help="Override compute device",
     )
     parser.add_argument(
+        "--gui",
+        action="store_true",
+        help="Launch the graphical interface instead of the CLI daemon",
+    )
+    parser.add_argument(
         "--no-tray",
         action="store_true",
         help="Run without system-tray icon (headless mode)",
@@ -106,11 +111,22 @@ def main() -> None:
     if args.translate_max_tokens:
         config.translate_max_tokens = args.translate_max_tokens
 
-    app = App(config, use_tray=not args.no_tray)
-    try:
-        app.run()
-    except KeyboardInterrupt:
-        print("\nInterrupted – shutting down.")
+    if args.gui:
+        from .gui import run_gui
+
+        run_gui(config)
+    else:
+        app = App(config, use_tray=not args.no_tray)
+        try:
+            app.run()
+        except KeyboardInterrupt:
+            print("\nInterrupted – shutting down.")
+
+
+def main_gui() -> None:
+    """Shortcut entry point that launches the GUI directly."""
+    sys.argv.append("--gui")
+    main()
 
 
 if __name__ == "__main__":
