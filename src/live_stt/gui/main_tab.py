@@ -60,9 +60,13 @@ class MainTab(Gtk.Box):
         if recording:
             self.btn_start.set_label("Stop" if not translate else _BTN_START_LABEL)
             self.btn_translate.set_label("Stop" if translate else _BTN_TRANSLATE_LABEL)
+            active_btn = self.btn_translate if translate else self.btn_start
+            active_btn.get_style_context().add_class("recording")
         else:
             self.btn_start.set_label(_BTN_START_LABEL)
             self.btn_translate.set_label(_BTN_TRANSLATE_LABEL)
+            self.btn_start.get_style_context().remove_class("recording")
+            self.btn_translate.get_style_context().remove_class("recording")
 
     def append_entry(self, text: str, entry_type: str = "transcription") -> None:
         """Add a history card to the list.
