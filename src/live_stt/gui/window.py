@@ -37,6 +37,9 @@ class LiveSTTWindow(Gtk.Window):
         self.logs_tab = LogsTab()
         notebook.append_page(self.logs_tab, Gtk.Label(label="Logs"))
 
+        self.model_logs_tab = LogsTab()
+        notebook.append_page(self.model_logs_tab, Gtk.Label(label="Model Logs"))
+
         # Initial state
         self.main_tab.set_status("Loading model…")
         self.main_tab.set_buttons_sensitive(False)

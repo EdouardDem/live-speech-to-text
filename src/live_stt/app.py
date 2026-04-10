@@ -56,9 +56,12 @@ class App:
             on_translate=lambda: self._toggle(translate=True),
         )
 
-        # Connect logger to the GUI log tab
+        # Connect loggers to GUI tabs
         logger.set_gui_callback(
             lambda msg: GLib.idle_add(self._window.logs_tab.append, msg)
+        )
+        logger.set_model_gui_callback(
+            lambda msg: GLib.idle_add(self._window.model_logs_tab.append, msg)
         )
 
     # -- Lifecycle ------------------------------------------------------------
@@ -74,6 +77,8 @@ class App:
 
     def _load_model(self) -> None:
         try:
+            # Intercept NeMo's logger before it produces any output
+            logger.capture_nemo_logs()
             self._transcriber.load()
             self._model_loaded = True
             GLib.idle_add(self._window.main_tab.set_status, "Ready")
