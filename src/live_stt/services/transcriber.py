@@ -3,7 +3,6 @@ from pathlib import Path
 
 import numpy as np
 import soundfile as sf
-import nemo.collections.asr as nemo_asr
 
 from . import logger
 
@@ -21,9 +20,14 @@ class Transcriber:
         self.model_name = model_name
         self._device_pref = device
         self._model = None
+        self._nemo_asr = None
 
     def load(self) -> None:
+        # Lazy import — allows capture_nemo_logs() to intercept before
+        # NeMo emits any log output.
+        import nemo.collections.asr as nemo_asr
 
+        self._nemo_asr = nemo_asr
         device = self._device_pref if self._device_pref != "auto" else None
         log.info("Loading model %s on %s …", self.model_name, self._device_pref)
         self._model = nemo_asr.models.ASRModel.from_pretrained(
