@@ -46,7 +46,7 @@ class Transcriber:
         tmp.close()
         try:
             sf.write(str(tmp_path), audio, sample_rate)
-            output = self._model.transcribe([str(tmp_path)])
+            output = self._model.transcribe([str(tmp_path)], verbose=False)
             first = output[0]
             return (first.text if hasattr(first, "text") else str(first)).strip()
         finally:
