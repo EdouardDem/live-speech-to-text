@@ -12,6 +12,42 @@ log = logger.get(__name__)
 
 _SAVE_MESSAGE = "Settings saved. You may need to restart the application for all changes to take effect."
 
+# Keys that must be wrapped in <chevrons> for pynput hotkey format.
+_PYNPUT_SPECIAL_KEYS = {
+    "alt", "alt_l", "alt_r", "alt_gr",
+    "ctrl", "ctrl_l", "ctrl_r",
+    "shift", "shift_l", "shift_r",
+    "cmd", "cmd_l", "cmd_r",
+    "super", "super_l", "super_r",
+    "tab", "enter", "space", "backspace", "delete",
+    "esc", "escape",
+    "up", "down", "left", "right",
+    "home", "end", "page_up", "page_down",
+    "insert", "print_screen", "scroll_lock", "pause",
+    "caps_lock", "num_lock",
+    "f1", "f2", "f3", "f4", "f5", "f6",
+    "f7", "f8", "f9", "f10", "f11", "f12",
+}
+
+_HOTKEY_FIELDS = {"hotkey", "translate_hotkey"}
+
+
+def _normalize_hotkey(value: str) -> str:
+    """Ensure each part of a hotkey string has chevrons where needed.
+
+    E.g. ``"ctrl+shift+z"`` becomes ``"<ctrl>+<shift>+z"``.
+    Already-wrapped parts like ``"<ctrl>"`` are left untouched.
+    """
+    parts = [p.strip().lower() for p in value.split("+")]
+    normalized = []
+    for part in parts:
+        bare = part.strip("<>").lower().strip()
+        if bare in _PYNPUT_SPECIAL_KEYS and not (part.startswith("<") and part.endswith(">")):
+            normalized.append(f"<{bare}>")
+        else:
+            normalized.append(part)
+    return "+".join(normalized)
+
 _GENERAL_SPEC = [
     ("hotkey", "Hotkey", "entry"),
     ("model_name", "Model", "entry"),
@@ -130,6 +166,10 @@ class SettingsTab(Gtk.ScrolledWindow):
                 value = widget.get_active_text()
             else:
                 value = widget.get_text()
+
+            if key in _HOTKEY_FIELDS:
+                value = _normalize_hotkey(value)
+                widget.set_text(value)
 
             field_type = type(getattr(self._cfg, key))
             try:
