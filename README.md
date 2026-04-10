@@ -11,7 +11,7 @@ translation. Powered by
 2. Press the hotkey again to stop.
 3. The audio is transcribed locally using the Parakeet model (GPU-accelerated
   when available).
-4. The resulting text is pasted into whatever input field has focus.
+4. The resulting text is pasted into whatever input field has focus (the clipboard content is restored after pasting).
 
 ### Translation mode
 

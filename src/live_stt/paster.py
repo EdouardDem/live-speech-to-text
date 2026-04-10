@@ -6,6 +6,8 @@ import time
 
 log = logging.getLogger(__name__)
 
+PRE_PASTE_DELAY = 0.05
+POST_PASTE_DELAY = 0.15
 
 class Paster:
     """Inserts text into the currently focused input field.
@@ -52,18 +54,42 @@ class Paster:
 
     # -- backends -------------------------------------------------------------
 
-    def _paste_xclip(self, text: str) -> None:
-        """Copy to clipboard via xclip, then simulate paste shortcut."""
+    @staticmethod
+    def _get_clipboard_xclip() -> bytes | None:
+        """Read current clipboard contents via xclip."""
+        try:
+            result = subprocess.run(
+                ["xclip", "-selection", "clipboard", "-o"],
+                capture_output=True,
+                timeout=2,
+            )
+            if result.returncode == 0:
+                return result.stdout
+        except (subprocess.TimeoutExpired, OSError):
+            pass
+        return None
+
+    @staticmethod
+    def _set_clipboard_xclip(data: bytes) -> None:
+        """Write data to clipboard via xclip."""
         proc = subprocess.Popen(
             ["xclip", "-selection", "clipboard"],
             stdin=subprocess.PIPE,
         )
-        proc.communicate(text.encode())
-        time.sleep(0.05)
+        proc.communicate(data)
+
+    def _paste_xclip(self, text: str) -> None:
+        """Copy to clipboard via xclip, then simulate paste shortcut."""
+        saved = self._get_clipboard_xclip()
+        self._set_clipboard_xclip(text.encode())
+        time.sleep(PRE_PASTE_DELAY)
         subprocess.run(
             ["xdotool", "key", "--clearmodifiers", self._shortcut],
             check=True,
         )
+        if saved is not None:
+            time.sleep(POST_PASTE_DELAY)
+            self._set_clipboard_xclip(saved)
 
     @staticmethod
     def _paste_xdotool(text: str) -> None:
@@ -73,10 +99,26 @@ class Paster:
             check=True,
         )
 
+    @staticmethod
+    def _get_clipboard_wayland() -> bytes | None:
+        """Read current clipboard contents via wl-paste."""
+        try:
+            result = subprocess.run(
+                ["wl-paste", "--no-newline"],
+                capture_output=True,
+                timeout=2,
+            )
+            if result.returncode == 0:
+                return result.stdout
+        except (subprocess.TimeoutExpired, OSError):
+            pass
+        return None
+
     def _paste_wayland(self, text: str) -> None:
         """Copy via wl-copy, then simulate paste shortcut via wtype."""
+        saved = self._get_clipboard_wayland()
         subprocess.run(["wl-copy", "--", text], check=True)
-        time.sleep(0.05)
+        time.sleep(PRE_PASTE_DELAY)
         # Build wtype args from shortcut (e.g. "ctrl+shift+v")
         parts = self._shortcut.split("+")
         key = parts[-1]
@@ -88,3 +130,6 @@ class Paster:
         for mod in reversed(modifiers):
             wtype_args += ["-m", mod]
         subprocess.run(wtype_args, check=True)
+        if saved is not None:
+            time.sleep(POST_PASTE_DELAY)
+            subprocess.run(["wl-copy", "--", saved], check=True)
