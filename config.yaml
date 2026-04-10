@@ -17,3 +17,15 @@ device: "auto"
 
 # Paste method: auto (detect), xclip, xdotool, wayland.
 paste_method: "auto"
+
+# Hotkey for speech-to-text with translation (pynput format).
+translate_hotkey: "<ctrl>+<shift>+t"
+
+# Target language for translation (requires ANTHROPIC_API_KEY).
+translate_language: "English"
+
+# Claude model for translation.
+translate_model: "claude-haiku-4-5-20251001"
+
+# Max tokens for translation response.
+translate_max_tokens: 1024

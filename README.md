@@ -12,6 +12,12 @@ the transcript into the currently focused text field, powered by
   when available).
 4. The resulting text is pasted into whatever input field has focus.
 
+### Translation mode
+
+Use **Ctrl+Shift+T** to start recording with translation enabled. The
+transcribed text will be translated to the target language (default: English)
+using Claude Haiku before being pasted.
+
 A system-tray icon provides visual feedback:
 
 
@@ -20,6 +26,7 @@ A system-tray icon provides visual feedback:
 | Grey   | Idle         |
 | Red    | Recording    |
 | Orange | Transcribing |
+| Blue   | Translating  |
 
 
 ## Prerequisites
@@ -66,6 +73,21 @@ source .venv/bin/activate
 pip install -e .
 ```
 
+#### 4. API Key (for translation feature)
+
+To use the translation feature, set your [Anthropic API key](https://platform.claude.com/settings/keys). Create a `.env`
+file in the project directory:
+
+```bash
+echo "ANTHROPIC_API_KEY=your-api-key" > .env
+```
+
+Or set it as an environment variable:
+
+```bash
+export ANTHROPIC_API_KEY=your-api-key
+```
+
 ## Usage
 
 ```bash
@@ -94,6 +116,12 @@ live-stt --device cpu
 
 # Verbose logging
 live-stt -v
+
+# Override translation hotkey
+live-stt --translate-hotkey '<ctrl>+<alt>+t'
+
+# Set target language for translation
+live-stt --translate-language French
 ```
 
 You can also run it as a module:
@@ -114,14 +142,19 @@ cp config.yaml ~/.config/live-stt/config.yaml
 Settings can also be set via CLI flags (see `live-stt --help`).
 
 
-| Key            | Default                       | Description                           |
-| -------------- | ----------------------------- | ------------------------------------- |
-| `hotkey`       | `<ctrl>+<shift>+z`            | Global hotkey (pynput format)         |
-| `model_name`   | `nvidia/parakeet-tdt-0.6b-v3` | HuggingFace model identifier          |
-| `sample_rate`  | `16000`                       | Mic sample rate in Hz                 |
-| `device`       | `auto`                        | `auto`, `cpu`, or `cuda`              |
-| `paste_method` | `auto`                        | `auto`, `xclip`, `xdotool`, `wayland` |
+| Key                  | Default                       | Description                           |
+| -------------------- | ----------------------------- | ------------------------------------- |
+| `hotkey`             | `<ctrl>+<shift>+z`            | Global hotkey (pynput format)         |
+| `model_name`         | `nvidia/parakeet-tdt-0.6b-v3` | HuggingFace model identifier          |
+| `sample_rate`        | `16000`                       | Mic sample rate in Hz                 |
+| `device`             | `auto`                        | `auto`, `cpu`, or `cuda`              |
+| `paste_method`       | `auto`                        | `auto`, `xclip`, `xdotool`, `wayland` |
+| `translate_hotkey`   | `<ctrl>+<shift>+t`            | Hotkey for speech-to-text + translate |
+| `translate_language` | `English`                     | Target language for translation       |
+| `translate_model`    | `claude-haiku-4-5-20251001`   | Claude model for translation          |
+| `translate_max_tokens` | `1024`                      | Max tokens for translation response   |
 
+Anthropic models are available [here](https://platform.claude.com/docs/en/about-claude/models/overview).
 
 ## Supported languages
 

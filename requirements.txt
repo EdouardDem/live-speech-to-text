@@ -6,3 +6,5 @@ pystray
 Pillow
 PyYAML
 numpy
+anthropic
+python-dotenv
