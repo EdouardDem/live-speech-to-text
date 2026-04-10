@@ -18,6 +18,10 @@ CSS = b"""
     min-height: 48px;
     font-size: 15px;
 }
+.history-card {
+    border-radius: 6px;
+    margin: 2px 0;
+}
 """
 
 

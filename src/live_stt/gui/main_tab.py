@@ -1,13 +1,16 @@
-"""Main tab — record / transcribe / translate controls and transcript log."""
+"""Main tab — record / transcribe / translate controls and history."""
 
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk  # noqa: E402
+from gi.repository import GLib, Gtk  # noqa: E402
 
+from .history_entry import HistoryEntry
 
 _BTN_START_LABEL = "Transcribe"
 _BTN_TRANSLATE_LABEL = "Translate"
+_SCROLL_DELAY = 50
+
 
 class MainTab(Gtk.Box):
     def __init__(self):
@@ -22,16 +25,15 @@ class MainTab(Gtk.Box):
         self.status_label.set_name("status-label")
         self.pack_start(self.status_label, False, False, 0)
 
-        # Transcript display
-        sw = Gtk.ScrolledWindow()
-        sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        sw.set_vexpand(True)
-        self.text_view = Gtk.TextView()
-        self.text_view.set_editable(False)
-        self.text_view.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
-        self.text_view.set_cursor_visible(False)
-        sw.add(self.text_view)
-        self.pack_start(sw, True, True, 0)
+        # History list
+        self._scroll = Gtk.ScrolledWindow()
+        self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self._scroll.set_vexpand(True)
+
+        self._list_box = Gtk.ListBox()
+        self._list_box.set_selection_mode(Gtk.SelectionMode.NONE)
+        self._scroll.add(self._list_box)
+        self.pack_start(self._scroll, True, True, 0)
 
         # Buttons
         btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
@@ -62,12 +64,22 @@ class MainTab(Gtk.Box):
             self.btn_start.set_label(_BTN_START_LABEL)
             self.btn_translate.set_label(_BTN_TRANSLATE_LABEL)
 
-    def append_text(self, text: str) -> None:
-        buf = self.text_view.get_buffer()
-        end = buf.get_end_iter()
-        if buf.get_char_count() > 0:
-            buf.insert(end, "\n")
-            end = buf.get_end_iter()
-        buf.insert(end, text)
-        mark = buf.create_mark(None, buf.get_end_iter(), False)
-        self.text_view.scroll_mark_onscreen(mark)
+    def append_entry(self, text: str, entry_type: str = "transcription") -> None:
+        """Add a history card to the list.
+
+        Parameters
+        ----------
+        text:
+            The transcribed or translated text.
+        entry_type:
+            ``"transcription"`` or ``"translation"``.
+        """
+        entry = HistoryEntry(text, entry_type)
+        self._list_box.add(entry)
+        # Delay scroll to let GTK finish laying out the new row
+        GLib.timeout_add(_SCROLL_DELAY, self._scroll_to_bottom)
+
+    def _scroll_to_bottom(self) -> bool:
+        adj = self._scroll.get_vadjustment()
+        adj.set_value(adj.get_upper() - adj.get_page_size())
+        return False  # run only once

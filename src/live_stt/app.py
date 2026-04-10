@@ -142,7 +142,9 @@ class App:
                 GLib.idle_add(self._window.main_tab.set_status, "Empty transcription")
                 return
 
-            GLib.idle_add(self._window.main_tab.append_text, text)
+            GLib.idle_add(
+                self._window.main_tab.append_entry, text, "transcription"
+            )
 
             if translate:
                 GLib.idle_add(self._window.main_tab.set_status, "Translating…")
@@ -154,7 +156,9 @@ class App:
                         max_tokens=self._cfg.translate_max_tokens,
                     )
                 translated = self._translator.translate(text, self._cfg.translate_language)
-                GLib.idle_add(self._window.main_tab.append_text, f"  → {translated}")
+                GLib.idle_add(
+                    self._window.main_tab.append_entry, translated, "translation"
+                )
                 text = translated
 
             self._paster.paste(text)
