@@ -75,7 +75,7 @@ pip install -e .
 
 #### 4. API Key (for translation feature)
 
-To use the translation feature, set your Anthropic API key. Create a `.env`
+To use the translation feature, set your [Anthropic API key](https://platform.claude.com/settings/keys). Create a `.env`
 file in the project directory:
 
 ```bash
@@ -151,9 +151,10 @@ Settings can also be set via CLI flags (see `live-stt --help`).
 | `paste_method`       | `auto`                        | `auto`, `xclip`, `xdotool`, `wayland` |
 | `translate_hotkey`   | `<ctrl>+<shift>+t`            | Hotkey for speech-to-text + translate |
 | `translate_language` | `English`                     | Target language for translation       |
-| `translate_model`    | `claude-haiku-4-5-20251001`     | Claude model for translation          |
+| `translate_model`    | `claude-haiku-4-5-20251001`   | Claude model for translation          |
 | `translate_max_tokens` | `1024`                      | Max tokens for translation response   |
 
+Anthropic models are available [here](https://platform.claude.com/docs/en/about-claude/models/overview).
 
 ## Supported languages
 
