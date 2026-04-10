@@ -27,7 +27,6 @@ gui = ["PyGObject"]
 
 [project.scripts]
 live-stt = "live_stt.__main__:main"
-live-stt-gui = "live_stt.__main__:main_gui"
 
 [tool.setuptools.packages.find]
 where = ["src"]

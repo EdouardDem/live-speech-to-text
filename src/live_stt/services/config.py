@@ -5,7 +5,6 @@ import yaml
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "live-stt" / "config.yaml"
 
-
 @dataclass
 class Config:
     hotkey: str = "<ctrl>+<shift>+z"

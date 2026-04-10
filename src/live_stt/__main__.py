@@ -5,8 +5,7 @@ import sys
 
 from dotenv import load_dotenv
 
-from .app import App
-from .config import Config
+from .services.config import Config
 
 
 def _check_system_deps() -> list[str]:
@@ -45,16 +44,6 @@ def main() -> None:
         "--device",
         choices=["auto", "cpu", "cuda"],
         help="Override compute device",
-    )
-    parser.add_argument(
-        "--gui",
-        action="store_true",
-        help="Launch the graphical interface instead of the CLI daemon",
-    )
-    parser.add_argument(
-        "--no-tray",
-        action="store_true",
-        help="Run without system-tray icon (headless mode)",
     )
     parser.add_argument(
         "--paste-shortcut",
@@ -111,22 +100,9 @@ def main() -> None:
     if args.translate_max_tokens:
         config.translate_max_tokens = args.translate_max_tokens
 
-    if args.gui:
-        from .gui import run_gui
+    from .app import App
 
-        run_gui(config)
-    else:
-        app = App(config, use_tray=not args.no_tray)
-        try:
-            app.run()
-        except KeyboardInterrupt:
-            print("\nInterrupted – shutting down.")
-
-
-def main_gui() -> None:
-    """Shortcut entry point that launches the GUI directly."""
-    sys.argv.append("--gui")
-    main()
+    App(config).run()
 
 
 if __name__ == "__main__":
