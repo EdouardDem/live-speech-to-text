@@ -1,11 +1,10 @@
 import argparse
-import logging
 import shutil
-import sys
 
 from dotenv import load_dotenv
 
 from .services.config import Config
+from .services import logger
 
 
 def _check_system_deps() -> list[str]:
@@ -71,17 +70,6 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
-        format="%(asctime)s  %(levelname)-8s  %(name)s  %(message)s",
-        stream=sys.stderr,
-    )
-
-    missing = _check_system_deps()
-    if missing:
-        log = logging.getLogger("live_stt")
-        log.warning("Missing system tools (paste may not work):\n%s", "\n".join(missing))
-
     config = Config.load(args.config)
     if args.hotkey:
         config.hotkey = args.hotkey
@@ -99,6 +87,13 @@ def main() -> None:
         config.translate_model = args.translate_model
     if args.translate_max_tokens:
         config.translate_max_tokens = args.translate_max_tokens
+
+    logger.setup(verbose=args.verbose, console=config.log_to_console)
+
+    missing = _check_system_deps()
+    if missing:
+        log = logger.get("live_stt")
+        log.warning("Missing system tools (paste may not work):\n%s", "\n".join(missing))
 
     from .app import App
 

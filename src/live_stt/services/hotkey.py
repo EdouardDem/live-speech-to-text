@@ -1,8 +1,8 @@
-import logging
-
 from pynput import keyboard
 
-log = logging.getLogger(__name__)
+from . import logger
+
+log = logger.get(__name__)
 
 
 class HotkeyListener:

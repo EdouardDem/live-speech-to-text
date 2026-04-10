@@ -1,12 +1,12 @@
-import logging
 import os
 
 import anthropic
 from dotenv import load_dotenv
 
+from .. import logger
 from .base import Translator
 
-log = logging.getLogger(__name__)
+log = logger.get(__name__)
 
 
 class AnthropicTranslator(Translator):

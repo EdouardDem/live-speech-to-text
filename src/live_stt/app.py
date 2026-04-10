@@ -1,6 +1,5 @@
 """Application — orchestrates services, GUI window, hotkeys, and tray icon."""
 
-import logging
 import threading
 
 import gi
@@ -12,12 +11,14 @@ from .gui.window import LiveSTTWindow
 from .services.audio import AudioRecorder
 from .services.config import Config
 from .services.hotkey import HotkeyListener
+from .services import logger
 from .services.paster import Paster
 from .services.transcriber import Transcriber
 from .services.translators import create_translator
 from .services.tray import TrayIcon
 
-log = logging.getLogger(__name__)
+log = logger.get(__name__)
+
 
 class App:
     """Main application — owns every service and the GTK window."""
@@ -53,6 +54,11 @@ class App:
             on_settings_saved=self._on_settings_saved,
             on_start=lambda: self._toggle(translate=False),
             on_translate=lambda: self._toggle(translate=True),
+        )
+
+        # Connect logger to the GUI log tab
+        logger.set_gui_callback(
+            lambda msg: GLib.idle_add(self._window.log_tab.append, msg)
         )
 
     # -- Lifecycle ------------------------------------------------------------
@@ -177,4 +183,6 @@ class App:
         )
         self._hotkey.start()
         self._translate_hotkey.start()
+        # Apply console logging preference
+        logger.set_console_enabled(self._cfg.log_to_console)
         self._window.main_tab.set_status("Settings saved")

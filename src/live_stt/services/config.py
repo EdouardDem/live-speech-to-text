@@ -18,6 +18,7 @@ class Config:
     translate_provider: str = "anthropic"
     translate_model: str = "claude-haiku-4-5-20251001"
     translate_max_tokens: int = 1024
+    log_to_console: bool = False
 
     @classmethod
     def load(cls, path: str | Path | None = None) -> "Config":

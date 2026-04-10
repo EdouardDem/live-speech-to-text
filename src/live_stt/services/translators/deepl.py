@@ -1,12 +1,12 @@
-import logging
 import os
 
 import deepl
 from dotenv import load_dotenv
 
+from .. import logger
 from .base import Translator
 
-log = logging.getLogger(__name__)
+log = logger.get(__name__)
 
 # DeepL uses language codes, not language names.
 # Map common language names to DeepL target language codes.

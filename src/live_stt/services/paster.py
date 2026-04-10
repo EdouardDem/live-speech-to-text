@@ -1,10 +1,11 @@
-import logging
 import os
 import shutil
 import subprocess
 import time
 
-log = logging.getLogger(__name__)
+from . import logger
+
+log = logger.get(__name__)
 
 
 class Paster:

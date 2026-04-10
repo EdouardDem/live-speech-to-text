@@ -1,4 +1,3 @@
-import logging
 import tempfile
 from pathlib import Path
 
@@ -6,7 +5,9 @@ import numpy as np
 import soundfile as sf
 import nemo.collections.asr as nemo_asr
 
-log = logging.getLogger(__name__)
+from . import logger
+
+log = logger.get(__name__)
 
 
 class Transcriber:
