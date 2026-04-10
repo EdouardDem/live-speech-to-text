@@ -1,43 +1,44 @@
 # Live Speech-to-Text
 
-A lightweight Linux daemon that records speech from your microphone and inserts
+A Linux desktop application that records speech from your microphone and inserts
 the transcript into the currently focused text field, with optional on-the-fly
 translation. Powered by
 [NVIDIA Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3).
 
+## Features
+
+- GTK 3 graphical interface with system tray integration
+- Local speech-to-text transcription (GPU-accelerated when available)
+- Optional translation via Anthropic (Claude) or DeepL APIs
+- Global hotkeys for hands-free operation
+- Clipboard content preserved after pasting
+- API keys stored encrypted in the configuration file
+- Transcription and translation history with one-click copy
+
 ## How it works
 
-1. Press a global hotkey (default **Ctrl+Shift+Z**) to start recording.
-2. Press the hotkey again to stop.
-3. The audio is transcribed locally using the Parakeet model (GPU-accelerated
-  when available).
-4. The resulting text is pasted into whatever input field has focus (the clipboard content is restored after pasting).
+1. Click **Transcribe** (or press **Ctrl+Shift+Z**) to start recording.
+2. Click **Stop** (or press the hotkey again) to stop.
+3. The audio is transcribed locally using the Parakeet model.
+4. The resulting text is pasted into whatever input field has focus.
 
 ### Translation mode
 
-Use **Ctrl+Shift+T** to start recording with translation enabled. The
-transcribed text will be translated to the target language (default: English)
-before being pasted.
+Click **Translate** (or press **Ctrl+Shift+T**) to start recording with
+translation enabled. The transcribed text will be translated to the target
+language (default: English) before being pasted.
 
-Multiple translation backends are supported:
+### System tray
 
-| Provider     | Config value  | API key env variable | Description                      |
-| ------------ | ------------- | -------------------- | -------------------------------- |
-| **Anthropic** | `anthropic`  | `ANTHROPIC_API_KEY`  | Claude models (default)          |
-| **DeepL**    | `deepl`       | `DEEPL_API_KEY`      | DeepL translation API            |
+The application lives in the system tray. Closing the window hides it to the
+tray — right-click the tray icon and select **Quit** to exit completely.
 
-Set `translate_provider` in the config file to choose which backend to use.
-
-A system-tray icon provides visual feedback:
-
-
-| Color  | State        |
-| ------ | ------------ |
-| Grey   | Idle         |
-| Red    | Recording    |
-| Orange | Transcribing |
-| Blue   | Translating  |
-
+| Tray color | State        |
+| ---------- | ------------ |
+| Grey       | Idle         |
+| Red        | Recording    |
+| Orange     | Transcribing |
+| Blue       | Translating  |
 
 ## Prerequisites
 
@@ -61,6 +62,9 @@ A system-tray icon provides visual feedback:
 # Audio capture
 sudo apt install libportaudio2
 
+# GTK 3 Python bindings
+sudo apt install python3-gi python3-gi-cairo gir1.2-gtk-3.0
+
 # Text insertion (X11)
 sudo apt install xdotool xclip
 
@@ -70,41 +74,21 @@ sudo apt install xdotool xclip
 
 #### 2. Python
 
-Python >= 3.10 is required. A virtual environment is recommended:
+Python >= 3.10 is required. Create a virtual environment with access to
+system site-packages (required for GTK bindings):
 
 ```bash
-python3 -m venv .venv
+python3 -m venv .venv --system-site-packages
 source .venv/bin/activate
 ```
+
+If you already have a virtual environment, enable system site-packages by
+setting `include-system-site-packages = true` in `.venv/pyvenv.cfg`.
 
 #### 3. Install
 
 ```bash
 pip install -e .
-```
-
-#### 4. API Key (for translation feature)
-
-Depending on the translation provider you choose, set the corresponding API key.
-
-**Anthropic** (default) — get your key from [Anthropic](https://platform.claude.com/settings/keys):
-
-```bash
-echo "ANTHROPIC_API_KEY=your-api-key" > .env
-```
-
-**DeepL** — get your key from [DeepL](https://www.deepl.com/pro-api):
-
-```bash
-echo "DEEPL_API_KEY=your-api-key" > .env
-```
-
-Or set them as environment variables:
-
-```bash
-export ANTHROPIC_API_KEY=your-api-key
-# or
-export DEEPL_API_KEY=your-api-key
 ```
 
 ## Usage
@@ -114,71 +98,50 @@ export DEEPL_API_KEY=your-api-key
 ./start.sh
 
 # With options
-./start.sh --no-tray
 ./start.sh --hotkey '<super>+s'
+./start.sh --device cpu
+./start.sh -v
 ```
 
-If the virtual environment is already activated, you can run `live-stt` directly:
+If the virtual environment is already activated:
 
 ```bash
-# Run with system tray icon (default)
 live-stt
-
-# Run headless (no tray, Ctrl+C to quit)
-live-stt --no-tray
-
-# Override the hotkey
-live-stt --hotkey '<super>+s'
-
-# Force CPU inference
-live-stt --device cpu
-
-# Verbose logging
-live-stt -v
-
-# Override translation hotkey
-live-stt --translate-hotkey '<ctrl>+<alt>+t'
-
-# Set target language for translation
-live-stt --translate-language French
-
-# Use Ctrl+V for pasting (default is Ctrl+Shift+V for terminal compatibility)
-live-stt --paste-shortcut 'ctrl+v'
-```
-
-You can also run it as a module:
-
-```bash
-python -m live_stt
 ```
 
 ## Configuration
 
-If you want a persistent configuration, copy the example config and edit the config file:
+All settings are accessible from the **Settings** tab in the application.
+Changes are saved to `~/.config/live-stt/config.yaml`.
 
-```bash
-mkdir -p ~/.config/live-stt
-cp config.yaml ~/.config/live-stt/config.yaml
-```
+API keys (Anthropic, DeepL) are entered as password fields in the Settings tab
+and stored encrypted. They can also be provided via environment variables as a
+fallback.
 
-Settings can also be set via CLI flags (see `live-stt --help`).
+### General settings
 
+| Setting            | Default                       | Description                                    |
+| ------------------ | ----------------------------- | ---------------------------------------------- |
+| `hotkey`           | `<ctrl>+<shift>+z`            | Global hotkey for transcription (pynput format) |
+| `model_name`       | `nvidia/parakeet-tdt-0.6b-v3` | HuggingFace model identifier                   |
+| `device`           | `auto`                        | `auto`, `cpu`, or `cuda`                       |
+| `paste_method`     | `auto`                        | `auto`, `xclip`, `xdotool`, `wayland`          |
+| `paste_shortcut`   | `ctrl+shift+v`                | `ctrl+shift+v` or `ctrl+v`                     |
+| `log_to_console`   | `false`                       | Output application logs to the console          |
 
-| Key                  | Default                       | Description                           |
-| -------------------- | ----------------------------- | ------------------------------------- |
-| `hotkey`             | `<ctrl>+<shift>+z`            | Global hotkey (pynput format)         |
-| `model_name`         | `nvidia/parakeet-tdt-0.6b-v3` | HuggingFace model identifier          |
-| `sample_rate`        | `16000`                       | Mic sample rate in Hz                 |
-| `device`             | `auto`                        | `auto`, `cpu`, or `cuda`              |
-| `paste_method`       | `auto`                        | `auto`, `xclip`, `xdotool`, `wayland` |
-| `paste_shortcut`     | `ctrl+shift+v`                | Keyboard shortcut for pasting (`ctrl+v`, `ctrl+shift+v`, …) |
-| `translate_hotkey`   | `<ctrl>+<shift>+t`            | Hotkey for speech-to-text + translate        |
-| `translate_language` | `English`                     | Target language for translation              |
-| `translate_provider` | `anthropic`                   | Translation backend (`anthropic`, `deepl`)   |
-| `translate_model`    | `claude-haiku-4-5-20251001`   | Claude model (anthropic provider only)       |
-| `translate_max_tokens` | `1024`                      | Max tokens (anthropic provider only)         |
+### Translation settings
 
-Anthropic models are available [here](https://platform.claude.com/docs/en/about-claude/models/overview).
+| Setting              | Default                     | Description                                  |
+| -------------------- | --------------------------- | -------------------------------------------- |
+| `translate_hotkey`   | `<ctrl>+<shift>+t`          | Global hotkey for transcribe + translate      |
+| `translate_language`  | `English`                  | Target language for translation               |
+| `translate_provider`  | `anthropic`                | Translation backend (`anthropic`, `deepl`)    |
+| `translate_model`     | `claude-haiku-4-5-20251001`| Claude model (Anthropic provider only)        |
+| `translate_max_tokens`| `1024`                     | Max tokens (Anthropic provider only)          |
+| `anthropic_api_key`   |                            | Anthropic API key (stored encrypted)          |
+| `deepl_api_key`       |                            | DeepL API key (stored encrypted)              |
+
+Anthropic models are listed [here](https://platform.claude.com/docs/en/about-claude/models/overview).
 
 ## Supported languages
 
