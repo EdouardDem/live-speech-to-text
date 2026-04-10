@@ -7,4 +7,5 @@ Pillow
 PyYAML
 numpy
 anthropic
+deepl
 python-dotenv

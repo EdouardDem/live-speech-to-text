@@ -15,6 +15,7 @@ class Config:
     paste_method: str = "auto"  # auto | xclip | xdotool | wayland
     translate_hotkey: str = "<ctrl>+<shift>+t"
     translate_language: str = "English"
+    translate_provider: str = "anthropic"
     translate_model: str = "claude-haiku-4-5-20251001"
     translate_max_tokens: int = 1024
 

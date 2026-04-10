@@ -7,7 +7,7 @@ from .config import Config
 from .hotkey import HotkeyListener
 from .paster import Paster
 from .transcriber import Transcriber
-from .translator import Translator
+from .translators import Translator, create_translator
 from .tray import TrayIcon
 
 log = logging.getLogger(__name__)
@@ -112,7 +112,8 @@ class App:
                     if self._tray:
                         self._tray.set_state("translating")
                     if self._translator is None:
-                        self._translator = Translator(
+                        self._translator = create_translator(
+                            provider=self._cfg.translate_provider,
                             model=self._cfg.translate_model,
                             max_tokens=self._cfg.translate_max_tokens,
                         )

@@ -4,10 +4,14 @@ import os
 import anthropic
 from dotenv import load_dotenv
 
+from .base import Translator
+
 log = logging.getLogger(__name__)
 
 
-class Translator:
+class AnthropicTranslator(Translator):
+    """Translation backend using the Anthropic (Claude) API."""
+
     def __init__(self, model: str, max_tokens: int):
         load_dotenv()
         api_key = os.getenv("ANTHROPIC_API_KEY")

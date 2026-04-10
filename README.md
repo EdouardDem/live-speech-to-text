@@ -16,7 +16,16 @@ the transcript into the currently focused text field, powered by
 
 Use **Ctrl+Shift+T** to start recording with translation enabled. The
 transcribed text will be translated to the target language (default: English)
-using Claude Haiku before being pasted.
+before being pasted.
+
+Multiple translation backends are supported:
+
+| Provider     | Config value  | API key env variable | Description                      |
+| ------------ | ------------- | -------------------- | -------------------------------- |
+| **Anthropic** | `anthropic`  | `ANTHROPIC_API_KEY`  | Claude models (default)          |
+| **DeepL**    | `deepl`       | `DEEPL_API_KEY`      | DeepL translation API            |
+
+Set `translate_provider` in the config file to choose which backend to use.
 
 A system-tray icon provides visual feedback:
 
@@ -75,17 +84,26 @@ pip install -e .
 
 #### 4. API Key (for translation feature)
 
-To use the translation feature, set your [Anthropic API key](https://platform.claude.com/settings/keys). Create a `.env`
-file in the project directory:
+Depending on the translation provider you choose, set the corresponding API key.
+
+**Anthropic** (default) — get your key from [Anthropic](https://platform.claude.com/settings/keys):
 
 ```bash
 echo "ANTHROPIC_API_KEY=your-api-key" > .env
 ```
 
-Or set it as an environment variable:
+**DeepL** — get your key from [DeepL](https://www.deepl.com/pro-api):
+
+```bash
+echo "DEEPL_API_KEY=your-api-key" > .env
+```
+
+Or set them as environment variables:
 
 ```bash
 export ANTHROPIC_API_KEY=your-api-key
+# or
+export DEEPL_API_KEY=your-api-key
 ```
 
 ## Usage
@@ -149,10 +167,11 @@ Settings can also be set via CLI flags (see `live-stt --help`).
 | `sample_rate`        | `16000`                       | Mic sample rate in Hz                 |
 | `device`             | `auto`                        | `auto`, `cpu`, or `cuda`              |
 | `paste_method`       | `auto`                        | `auto`, `xclip`, `xdotool`, `wayland` |
-| `translate_hotkey`   | `<ctrl>+<shift>+t`            | Hotkey for speech-to-text + translate |
-| `translate_language` | `English`                     | Target language for translation       |
-| `translate_model`    | `claude-haiku-4-5-20251001`   | Claude model for translation          |
-| `translate_max_tokens` | `1024`                      | Max tokens for translation response   |
+| `translate_hotkey`   | `<ctrl>+<shift>+t`            | Hotkey for speech-to-text + translate        |
+| `translate_language` | `English`                     | Target language for translation              |
+| `translate_provider` | `anthropic`                   | Translation backend (`anthropic`, `deepl`)   |
+| `translate_model`    | `claude-haiku-4-5-20251001`   | Claude model (anthropic provider only)       |
+| `translate_max_tokens` | `1024`                      | Max tokens (anthropic provider only)         |
 
 Anthropic models are available [here](https://platform.claude.com/docs/en/about-claude/models/overview).
 

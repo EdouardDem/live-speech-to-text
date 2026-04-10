@@ -21,11 +21,14 @@ paste_method: "auto"
 # Hotkey for speech-to-text with translation (pynput format).
 translate_hotkey: "<ctrl>+<shift>+t"
 
-# Target language for translation (requires ANTHROPIC_API_KEY).
+# Target language for translation.
 translate_language: "English"
 
-# Claude model for translation.
+# Translation provider: anthropic, deepl.
+translate_provider: "anthropic"
+
+# Claude model for translation (only used with anthropic provider).
 translate_model: "claude-haiku-4-5-20251001"
 
-# Max tokens for translation response.
+# Max tokens for translation response (only used with anthropic provider).
 translate_max_tokens: 1024
