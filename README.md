@@ -1,5 +1,7 @@
 # Live Speech-to-Text
 
+[![Buy Me a Coffee](https://img.shields.io/badge/buy_me_a_coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/edouarddem)
+
 A Linux desktop application that records speech from your microphone and inserts
 the transcript into the currently focused text field, with optional on-the-fly
 translation. Powered by
