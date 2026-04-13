@@ -3,12 +3,13 @@ import threading
 import numpy as np
 import sounddevice as sd
 
+from .config import Config
 
 class AudioRecorder:
     """Records mono 16-kHz audio from the default input device."""
 
-    def __init__(self, sample_rate: int = 16000):
-        self.sample_rate = sample_rate
+    def __init__(self, config: Config):
+        self._config = config
         self._frames: list[np.ndarray] = []
         self._recording = False
         self._lock = threading.Lock()
@@ -23,7 +24,7 @@ class AudioRecorder:
             self._frames.clear()
             self._recording = True
         self._stream = sd.InputStream(
-            samplerate=self.sample_rate,
+            samplerate=self._config.sample_rate,
             channels=1,
             dtype="float32",
             callback=self._on_audio,
