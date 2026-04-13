@@ -5,6 +5,7 @@ import numpy as np
 import soundfile as sf
 
 from . import logger
+from .config import Config
 
 log = logger.get(__name__)
 
@@ -12,13 +13,10 @@ log = logger.get(__name__)
 class Transcriber:
     """Wraps an NVIDIA NeMo ASR model (Parakeet) for offline transcription."""
 
-    def __init__(
-        self,
-        model_name: str = "nvidia/parakeet-tdt-0.6b-v3",
-        device: str = "auto",
-    ):
-        self.model_name = model_name
-        self._device_pref = device
+    def __init__(self, config: Config):
+        self._config = config
+        self._model_name = self._config.model_name
+        self._device_pref = self._config.device
         self._model = None
         self._nemo_asr = None
 
@@ -29,9 +27,9 @@ class Transcriber:
 
         self._nemo_asr = nemo_asr
         device = self._device_pref if self._device_pref != "auto" else None
-        log.info("Loading model %s on %s …", self.model_name, self._device_pref)
+        log.info("Loading model %s on %s …", self._model_name, self._device_pref)
         self._model = nemo_asr.models.ASRModel.from_pretrained(
-            model_name=self.model_name,
+            model_name=self._model_name,
             map_location=device,
         )
         self._model.eval()

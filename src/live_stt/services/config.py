@@ -1,4 +1,5 @@
-from dataclasses import asdict, dataclass, field, fields
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 
 import yaml
@@ -28,6 +29,13 @@ class Config:
     anthropic_api_key: str = ""
     deepl_api_key: str = ""
 
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "_listeners", [])
+
+    def subscribe(self, callback: Callable[[], None]) -> None:
+        """Register a callback to be invoked whenever the config is saved."""
+        self._listeners.append(callback)
+
     @classmethod
     def load(cls, path: str | Path | None = None) -> "Config":
         p = Path(path) if path else DEFAULT_CONFIG_PATH
@@ -51,3 +59,5 @@ class Config:
             if data.get(key):
                 data[key] = keystore.encrypt(data[key])
         p.write_text(yaml.dump(data, default_flow_style=False, sort_keys=False))
+        for listener in self._listeners:
+            listener()

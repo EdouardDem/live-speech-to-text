@@ -1,17 +1,29 @@
 from pynput import keyboard
 
+from .config import Config
 from . import logger
 
 log = logger.get(__name__)
 
 
 class HotkeyListener:
-    """Listens for a global hotkey combination and fires a callback."""
+    """Listens for a global hotkey combination and fires a callback.
 
-    def __init__(self, hotkey_str: str, on_activate):
-        self._hotkey_str = hotkey_str
+    ``hotkey_key`` is the attribute name on *config* that holds the hotkey
+    string (e.g. ``"hotkey"`` or ``"translate_hotkey"``).  When the config is
+    saved the listener automatically restarts with the new binding.
+    """
+
+    def __init__(self, config: Config, hotkey_key: str, on_activate):
+        self._config = config
+        self._hotkey_key = hotkey_key
         self._on_activate = on_activate
         self._listener: keyboard.Listener | None = None
+        config.subscribe(self._on_config_changed)
+
+    @property
+    def _hotkey_str(self) -> str:
+        return getattr(self._config, self._hotkey_key)
 
     def start(self) -> None:
         hotkey = keyboard.HotKey(
@@ -33,3 +45,8 @@ class HotkeyListener:
         if self._listener is not None:
             self._listener.stop()
             self._listener = None
+
+    def _on_config_changed(self) -> None:
+        if self._listener is not None:
+            self.stop()
+            self.start()

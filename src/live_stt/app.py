@@ -30,19 +30,14 @@ class App:
         self._translator = None
 
         # Services
-        self._recorder = AudioRecorder(sample_rate=config.sample_rate)
-        self._transcriber = Transcriber(
-            model_name=config.model_name,
-            device=config.device,
-        )
-        self._paster = Paster(
-            method=config.paste_method,
-            shortcut=config.paste_shortcut,
-        )
-        self._hotkey = HotkeyListener(config.hotkey, self._on_hotkey_toggle)
+        self._recorder = AudioRecorder(config)
+        self._transcriber = Transcriber(config)
+        self._paster = Paster(config)
+        self._hotkey = HotkeyListener(config, "hotkey", self._on_hotkey_toggle)
         self._translate_hotkey = HotkeyListener(
-            config.translate_hotkey, self._on_hotkey_translate_toggle
+            config, "translate_hotkey", self._on_hotkey_translate_toggle
         )
+        config.subscribe(self._on_config_changed)
         self._tray = TrayIcon(
             on_show_window=lambda: GLib.idle_add(self._show_window),
             on_quit=lambda: GLib.idle_add(self._quit),
@@ -192,22 +187,9 @@ class App:
 
     # -- Settings -------------------------------------------------------------
 
+    def _on_config_changed(self) -> None:
+        self._translator = None
+        logger.set_console_enabled(self._cfg.log_to_console)
 
     def _on_settings_saved(self) -> None:
-        self._paster = Paster(
-            method=self._cfg.paste_method,
-            shortcut=self._cfg.paste_shortcut,
-        )
-        self._translator = None
-        # Restart hotkeys with new bindings
-        self._hotkey.stop()
-        self._translate_hotkey.stop()
-        self._hotkey = HotkeyListener(self._cfg.hotkey, self._on_hotkey_toggle)
-        self._translate_hotkey = HotkeyListener(
-            self._cfg.translate_hotkey, self._on_hotkey_translate_toggle
-        )
-        self._hotkey.start()
-        self._translate_hotkey.start()
-        # Apply console logging preference
-        logger.set_console_enabled(self._cfg.log_to_console)
         self._window.main_tab.set_status("Settings saved")

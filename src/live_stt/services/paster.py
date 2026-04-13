@@ -4,6 +4,7 @@ import subprocess
 import time
 
 from . import logger
+from .config import Config
 
 log = logger.get(__name__)
 
@@ -16,10 +17,15 @@ class Paster:
     Supports X11 (xclip + xdotool) and Wayland (wl-copy + wtype) backends.
     """
 
-    def __init__(self, method: str = "auto", shortcut: str = "ctrl+shift+v"):
-        self._method = self._resolve(method)
-        self._shortcut = shortcut
-        log.info("Paste backend: %s (shortcut: %s)", self._method, self._shortcut)
+    def __init__(self, config: Config):
+        self._config = config
+        self._on_config_changed()
+        config.subscribe(self._on_config_changed)
+
+    def _on_config_changed(self) -> None:
+        self._method = self._resolve(self._config.paste_method)
+        self._shortcut = self._config.paste_shortcut
+        log.info("Paste backend updated: %s (shortcut: %s)", self._method, self._shortcut)
 
     # -- public ---------------------------------------------------------------
 
