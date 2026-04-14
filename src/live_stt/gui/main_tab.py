@@ -9,7 +9,13 @@ from gi.repository import GLib, Gtk  # noqa: E402
 
 from .history_entry import HistoryEntry, _TRANSCRIPTION_ICON
 
-_BTN_TRANSCRIBE_LABEL = "Transcribe"
+# -- UI texts ----------------------------------------------------------------
+
+_TXT_BTN_TRANSCRIBE = "Record"
+_TXT_BTN_STOP = "Stop"
+_TXT_STATUS_INIT = "Initializing\u2026"
+_TXT_FRAME_PROCESSORS = "Post-processors"
+
 _SCROLL_DELAY = 50
 
 
@@ -22,7 +28,7 @@ class MainTab(Gtk.Box):
         self.set_margin_end(16)
 
         # Status label
-        self.status_label = Gtk.Label(label="Initializing…")
+        self.status_label = Gtk.Label(label=_TXT_STATUS_INIT)
         self.status_label.set_name("status-label")
         self.pack_start(self.status_label, False, False, 0)
 
@@ -37,7 +43,7 @@ class MainTab(Gtk.Box):
         self.pack_start(self._scroll, True, True, 0)
 
         # Post-processor toggles section (rebuilt dynamically)
-        self._processors_frame = Gtk.Frame(label="Post-processors")
+        self._processors_frame = Gtk.Frame(label=_TXT_FRAME_PROCESSORS)
         self._processors_frame.set_shadow_type(Gtk.ShadowType.NONE)
         self._processors_frame.set_no_show_all(True)
 
@@ -52,7 +58,7 @@ class MainTab(Gtk.Box):
         self.pack_start(self._processors_frame, False, False, 0)
 
         # Transcribe button
-        self.btn_start = Gtk.Button(label=_BTN_TRANSCRIBE_LABEL)
+        self.btn_start = Gtk.Button(label=_TXT_BTN_TRANSCRIBE)
         self.btn_start.set_name("btn-transcribe")
         self.pack_start(self.btn_start, False, False, 0)
 
@@ -112,10 +118,10 @@ class MainTab(Gtk.Box):
 
     def set_recording_state(self, recording: bool) -> None:
         if recording:
-            self.btn_start.set_label("Stop")
+            self.btn_start.set_label(_TXT_BTN_STOP)
             self.btn_start.get_style_context().add_class("recording")
         else:
-            self.btn_start.set_label(_BTN_TRANSCRIBE_LABEL)
+            self.btn_start.set_label(_TXT_BTN_TRANSCRIBE)
             self.btn_start.get_style_context().remove_class("recording")
 
     # -- History --------------------------------------------------------------
