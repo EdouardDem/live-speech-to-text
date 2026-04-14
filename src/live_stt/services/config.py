@@ -1,6 +1,7 @@
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -27,10 +28,20 @@ class Config:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "_listeners", [])
+        object.__setattr__(self, "_last_saved", asdict(self))
 
-    def subscribe(self, callback: Callable[[], None]) -> None:
-        """Register a callback to be invoked whenever the config is saved."""
-        self._listeners.append(callback)
+    def subscribe(
+        self,
+        keys: Iterable[str],
+        callback: Callable[[set[str]], None],
+    ) -> None:
+        """Register a callback invoked when any of *keys* changes on save.
+
+        The callback receives the subset of *keys* whose values changed since
+        the previous save. Listeners are skipped entirely when none of the
+        keys they care about were modified.
+        """
+        self._listeners.append((frozenset(keys), callback))
 
     @classmethod
     def load(cls, path: str | Path | None = None) -> "Config":
@@ -49,11 +60,29 @@ class Config:
     def save(self, path: str | Path | None = None) -> None:
         p = Path(path) if path else DEFAULT_CONFIG_PATH
         p.parent.mkdir(parents=True, exist_ok=True)
+
         data = asdict(self)
-        # Encrypt sensitive fields before writing
+        changes = self._extract_changes_and_update_last_saved(data)
+        enc = self._encrypt_fields(data)
+        
+        p.write_text(yaml.dump(enc, default_flow_style=False, sort_keys=False))
+        
+        self._fire_callbacks(changes)
+
+    def _encrypt_fields(self, data: dict[str, Any]) -> dict[str, Any]:
+        output = dict(data)
         for key in _ENCRYPTED_FIELDS:
-            if data.get(key):
-                data[key] = keystore.encrypt(data[key])
-        p.write_text(yaml.dump(data, default_flow_style=False, sort_keys=False))
-        for listener in self._listeners:
-            listener()
+            if output.get(key):
+                output[key] = keystore.encrypt(output[key])
+        return output
+
+    def _extract_changes_and_update_last_saved(self, data: dict[str, Any]) -> set[str]:
+        changes = {k for k, v in data.items() if self._last_saved.get(k) != v}
+        self._last_saved = data
+        return changes
+
+    def _fire_callbacks(self, changes: set[str]) -> bool:
+        for keys, callback in self._listeners:
+            relevant = changes & keys
+            if relevant:
+                callback(relevant)

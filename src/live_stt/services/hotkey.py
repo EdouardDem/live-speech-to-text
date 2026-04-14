@@ -19,7 +19,7 @@ class HotkeyListener:
         self._hotkey_key = hotkey_key
         self._on_activate = on_activate
         self._listener: keyboard.Listener | None = None
-        config.subscribe(self._on_config_changed)
+        config.subscribe({hotkey_key}, self._on_config_changed)
 
     @property
     def _hotkey_str(self) -> str:
@@ -46,7 +46,6 @@ class HotkeyListener:
             self._listener.stop()
             self._listener = None
 
-    def _on_config_changed(self) -> None:
-        if self._listener is not None:
-            self.stop()
-            self.start()
+    def _on_config_changed(self, _changed: set[str]) -> None:
+        self.stop()
+        self.start()
