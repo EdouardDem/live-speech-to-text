@@ -62,6 +62,12 @@ class MainTab(Gtk.Box):
         self.btn_start.set_name("btn-transcribe")
         self.pack_start(self.btn_start, False, False, 0)
 
+        # Enabled post-processors summary (italic, below the record button)
+        self._enabled_label = Gtk.Label()
+        self._enabled_label.set_xalign(0.5)
+        self._enabled_label.set_no_show_all(True)
+        self.pack_start(self._enabled_label, False, False, 0)
+
     # -- Processor toggles ----------------------------------------------------
 
     def rebuild_processors(
@@ -105,6 +111,16 @@ class MainTab(Gtk.Box):
             self._processors_frame.show_all()
         else:
             self._processors_frame.hide()
+
+        enabled_names = [p.name for p in processors if p.enabled]
+        if enabled_names:
+            markup = "<i>" + GLib.markup_escape_text(
+                " → ".join(enabled_names)
+            ) + "</i>"
+            self._enabled_label.set_markup(markup)
+            self._enabled_label.show()
+        else:
+            self._enabled_label.hide()
 
     # -- Status / sensitivity -------------------------------------------------
 

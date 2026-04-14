@@ -48,8 +48,8 @@ class App:
             on_start=lambda: self._toggle(),
         )
 
-        # Wire processor toggle updates from main-tab switches into registry
-        self._registry.on_change(self._on_processors_changed)
+        # Keep the main-tab processor section in sync with config changes.
+        config.subscribe({"post_processors"}, self._on_processors_changed)
         # Initial population of the toggle section
         GLib.idle_add(
             self._window.main_tab.rebuild_processors,
@@ -172,8 +172,12 @@ class App:
     def _on_processor_switch(self, proc_id: str, enabled: bool) -> None:
         self._registry.set_enabled(proc_id, enabled)
 
-    def _on_processors_changed(self, processors) -> None:
-        self._window.main_tab.rebuild_processors(processors, self._on_processor_switch)
+    def _on_processors_changed(self, _changed: set[str]) -> None:
+        GLib.idle_add(
+            self._window.main_tab.rebuild_processors,
+            self._registry.get_all(),
+            self._on_processor_switch,
+        )
 
     # -- Settings -------------------------------------------------------------
 
