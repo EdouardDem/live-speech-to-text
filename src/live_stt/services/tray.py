@@ -13,14 +13,14 @@ _COLORS = {
     "idle": "#888888",
     "recording": "#e74c3c",
     "transcribing": "#f39c12",
-    "translating": "#3498db",
+    "processing": "#3498db",
 }
 
 _TITLES = {
     "idle": "Live STT — Idle",
     "recording": "Live STT — Recording…",
     "transcribing": "Live STT — Transcribing…",
-    "translating": "Live STT — Translating…",
+    "processing": "Live STT — Processing…",
 }
 
 
