@@ -34,7 +34,7 @@ class LiveSTTWindow(Gtk.Window):
         on_start,
     ):
         super().__init__(title=_TXT_WINDOW_TITLE)
-        self.set_default_size(520, 480)
+        self.set_default_size(640, 600)
         self.set_border_width(12)
 
         apply_css(self.get_screen())
