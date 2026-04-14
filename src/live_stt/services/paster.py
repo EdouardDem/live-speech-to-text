@@ -19,10 +19,13 @@ class Paster:
 
     def __init__(self, config: Config):
         self._config = config
-        self._on_config_changed()
-        config.subscribe(self._on_config_changed)
+        self._refresh()
+        config.subscribe({"paste_method", "paste_shortcut"}, self._on_config_changed)
 
-    def _on_config_changed(self) -> None:
+    def _on_config_changed(self, _changed: set[str]) -> None:
+        self._refresh()
+
+    def _refresh(self) -> None:
         self._method = self._resolve(self._config.paste_method)
         self._shortcut = self._config.paste_shortcut
         log.info("Paste backend updated: %s (shortcut: %s)", self._method, self._shortcut)

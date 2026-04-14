@@ -94,7 +94,7 @@ class PostProcessorRegistry:
         self._change_callbacks: list[Callable[[list[PostProcessorConfig]], None]] = []
         self._saving = False
 
-        config.subscribe(self._on_config_changed)
+        config.subscribe({"post_processors"}, self._on_config_changed)
         self._reload()
 
     # -- Public query ---------------------------------------------------------
@@ -186,11 +186,9 @@ class PostProcessorRegistry:
             self._processors.append(cfg)
             self._setup_hotkey(cfg)
 
-    def _on_config_changed(self) -> None:
+    def _on_config_changed(self, _changed: set[str]) -> None:
         if self._saving:
             return
-        # External save (e.g. API key change in Settings) — rebuild so
-        # processors pick up the new key on next run.
         self._reload()
         self._notify_change()
 

@@ -38,7 +38,7 @@ class App:
             on_quit=lambda: GLib.idle_add(self._quit),
         )
 
-        config.subscribe(self._on_config_changed)
+        config.subscribe({"log_to_console"}, self._on_config_changed)
 
         # Window
         self._window = LiveSTTWindow(
@@ -175,7 +175,7 @@ class App:
 
     # -- Settings -------------------------------------------------------------
 
-    def _on_config_changed(self) -> None:
+    def _on_config_changed(self, _changed: set[str]) -> None:
         logger.set_console_enabled(self._cfg.log_to_console)
 
     def _on_settings_saved(self) -> None:
