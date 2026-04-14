@@ -11,6 +11,7 @@ from pynput import keyboard
 from .base import PostProcessor, PostProcessorConfig
 from ..services import logger
 from ..services.config import Config
+from ..services.hotkey import start_hotkey_listener
 
 log = logger.get(__name__)
 
@@ -188,21 +189,9 @@ class PostProcessorRegistry:
         if not cfg.hotkey:
             return
         try:
-            listener_cell: list[keyboard.Listener] = []
-            hk = keyboard.HotKey(
-                keyboard.HotKey.parse(cfg.hotkey),
-                lambda pid=cfg.id: self._on_hotkey_fired(pid),
+            listener = start_hotkey_listener(
+                cfg.hotkey, lambda pid=cfg.id: self._on_hotkey_fired(pid)
             )
-
-            def for_canonical(func):
-                return lambda key: func(listener_cell[0].canonical(key))
-
-            listener = keyboard.Listener(
-                on_press=for_canonical(hk.press),
-                on_release=for_canonical(hk.release),
-            )
-            listener_cell.append(listener)
-            listener.start()
             self._hotkey_listeners[cfg.id] = listener
             log.info("Post-processor hotkey registered: %s → %s", cfg.hotkey, cfg.name)
         except Exception:
