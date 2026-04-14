@@ -130,9 +130,10 @@ class MainTab(Gtk.Box):
         self,
         text: str,
         icon_name: str,
+        indent_level: int = 0,
     ) -> None:
         """Add a history card."""
-        entry = HistoryEntry(text, icon_name)
+        entry = HistoryEntry(text, icon_name, indent_level=indent_level)
         self._list_box.add(entry)
         GLib.timeout_add(_SCROLL_DELAY, self._scroll_to_bottom)
 
