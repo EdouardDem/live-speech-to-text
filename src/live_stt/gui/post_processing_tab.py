@@ -1,13 +1,11 @@
 """Post-processing tab — manage the ordered list of post-processors."""
 
-import uuid
-
 import gi
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk  # noqa: E402
 
-from ..post_processors.base import PostProcessorConfig
+from ..post_processors.base import PostProcessorConfig, make_config
 from ..post_processors.registry import PostProcessorRegistry
 from ..services.config import Config
 
@@ -20,25 +18,71 @@ _PROVIDER_DEFAULT_ICONS = {
 
 
 # ---------------------------------------------------------------------------
+# Provider chooser dialog
+# ---------------------------------------------------------------------------
+
+class ProviderChooserDialog(Gtk.Dialog):
+    """Small modal that lets the user pick a provider before editing."""
+
+    def __init__(self, parent: Gtk.Window | None) -> None:
+        super().__init__(
+            title="Choose provider",
+            transient_for=parent,
+            flags=Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+        )
+        self.add_button("Cancel", Gtk.ResponseType.CANCEL)
+        ok_btn = self.add_button("Next", Gtk.ResponseType.OK)
+        ok_btn.get_style_context().add_class("suggested-action")
+
+        box = self.get_content_area()
+        box.set_spacing(12)
+        box.set_margin_top(16)
+        box.set_margin_bottom(8)
+        box.set_margin_start(16)
+        box.set_margin_end(16)
+
+        label = Gtk.Label(label="Select the post-processor type:")
+        label.set_xalign(0)
+        box.pack_start(label, False, False, 0)
+
+        self._combo = Gtk.ComboBoxText()
+        for p in _PROVIDERS:
+            self._combo.append(p, _PROVIDER_LABELS[p])
+        self._combo.set_active_id("anthropic")
+        box.pack_start(self._combo, False, False, 0)
+
+        self.show_all()
+
+    def get_provider(self) -> str:
+        return self._combo.get_active_id() or "anthropic"
+
+
+# ---------------------------------------------------------------------------
 # Editor dialog
 # ---------------------------------------------------------------------------
 
 class ProcessorEditorDialog(Gtk.Dialog):
-    """Dialog for creating or editing a single PostProcessorConfig."""
+    """Dialog for creating or editing a single PostProcessorConfig.
+
+    The *provider* is fixed at construction time — for new processors it is
+    chosen via :class:`ProviderChooserDialog` beforehand.
+    """
 
     def __init__(
         self,
         parent: Gtk.Window,
         app_config: Config,
-        cfg: PostProcessorConfig | None = None,
+        cfg: PostProcessorConfig,
     ) -> None:
+        is_new = cfg.name == "New Processor"
         super().__init__(
-            title="Edit processor" if cfg else "Add processor",
+            title="Edit processor" if not is_new else "Add processor",
             transient_for=parent,
             flags=Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
         )
         self._app_config = app_config
-        self._editing_id = cfg.id if cfg else str(uuid.uuid4())
+        self._provider = cfg.provider
+        self._editing_id = cfg.id
 
         self.add_button("Cancel", Gtk.ResponseType.CANCEL)
         ok_btn = self.add_button("Save", Gtk.ResponseType.OK)
@@ -56,55 +100,51 @@ class ProcessorEditorDialog(Gtk.Dialog):
         grid.set_margin_end(16)
         box.pack_start(grid, True, True, 0)
 
+        # Provider (read-only)
+        grid.attach(Gtk.Label(label="Provider", xalign=0), 0, 0, 1, 1)
+        provider_label = Gtk.Label(
+            label=_PROVIDER_LABELS.get(self._provider, self._provider),
+            xalign=0,
+        )
+        provider_label.set_hexpand(True)
+        grid.attach(provider_label, 1, 0, 1, 1)
+
         # Name
-        grid.attach(Gtk.Label(label="Name", xalign=0), 0, 0, 1, 1)
+        grid.attach(Gtk.Label(label="Name", xalign=0), 0, 1, 1, 1)
         self._name = Gtk.Entry()
         self._name.set_hexpand(True)
-        self._name.set_text(cfg.name if cfg else "New Processor")
-        grid.attach(self._name, 1, 0, 1, 1)
+        self._name.set_text(cfg.name)
+        grid.attach(self._name, 1, 1, 1, 1)
 
         # Icon
-        grid.attach(Gtk.Label(label="Icon name", xalign=0), 0, 1, 1, 1)
+        grid.attach(Gtk.Label(label="Icon name", xalign=0), 0, 2, 1, 1)
         self._icon = Gtk.Entry()
         self._icon.set_hexpand(True)
         self._icon.set_placeholder_text("e.g. accessories-text-editor-symbolic")
-        self._icon.set_text(cfg.icon if cfg else "")
-        grid.attach(self._icon, 1, 1, 1, 1)
+        self._icon.set_text(cfg.icon)
+        grid.attach(self._icon, 1, 2, 1, 1)
 
         # Hotkey
-        grid.attach(Gtk.Label(label="Hotkey (optional)", xalign=0), 0, 2, 1, 1)
+        grid.attach(Gtk.Label(label="Hotkey (optional)", xalign=0), 0, 3, 1, 1)
         self._hotkey = Gtk.Entry()
         self._hotkey.set_hexpand(True)
         self._hotkey.set_placeholder_text("e.g. <ctrl>+<shift>+t")
-        self._hotkey.set_text(cfg.hotkey if cfg else "")
-        grid.attach(self._hotkey, 1, 2, 1, 1)
+        self._hotkey.set_text(cfg.hotkey)
+        grid.attach(self._hotkey, 1, 3, 1, 1)
 
-        # Provider combo
-        grid.attach(Gtk.Label(label="Provider", xalign=0), 0, 3, 1, 1)
-        self._provider_combo = Gtk.ComboBoxText()
-        for p in _PROVIDERS:
-            self._provider_combo.append(p, _PROVIDER_LABELS[p])
-        active_provider = cfg.provider if cfg else "anthropic"
-        self._provider_combo.set_active_id(active_provider)
-        self._provider_combo.set_hexpand(True)
-        grid.attach(self._provider_combo, 1, 3, 1, 1)
-
-        # Provider-specific forms in a stack
-        self._stack = Gtk.Stack()
-        self._stack.set_margin_top(8)
-        self._stack.set_margin_bottom(8)
-
+        # Provider-specific form
         from ..post_processors.anthropic.gui import AnthropicForm
         from ..post_processors.deepl.gui import DeepLForm
 
-        self._anthropic_form = AnthropicForm()
-        self._deepl_form = DeepLForm()
+        if self._provider == "anthropic":
+            self._form = AnthropicForm()
+        else:
+            self._form = DeepLForm()
 
-        self._stack.add_named(self._anthropic_form, "anthropic")
-        self._stack.add_named(self._deepl_form, "deepl")
-        self._stack.set_visible_child_name(active_provider)
-
-        box.pack_start(self._stack, True, True, 0)
+        self._form.set_margin_top(8)
+        self._form.set_margin_bottom(8)
+        self._form.populate(cfg)
+        box.pack_start(self._form, True, True, 0)
 
         # API key warning
         self._warning = Gtk.Label()
@@ -115,31 +155,17 @@ class ProcessorEditorDialog(Gtk.Dialog):
         self._warning.set_no_show_all(True)
         box.pack_start(self._warning, False, False, 0)
 
-        # Populate from existing config
-        if cfg:
-            self._anthropic_form.populate(cfg)
-            self._deepl_form.populate(cfg)
-
-        self._provider_combo.connect("changed", self._on_provider_changed)
-        self._update_warning(active_provider)
-
+        self._update_warning()
         self.show_all()
 
-    def _on_provider_changed(self, combo: Gtk.ComboBoxText) -> None:
-        provider = combo.get_active_id() or "anthropic"
-        self._stack.set_visible_child_name(provider)
-        if not self._icon.get_text().strip():
-            self._icon.set_text(_PROVIDER_DEFAULT_ICONS.get(provider, ""))
-        self._update_warning(provider)
-
-    def _update_warning(self, provider: str) -> None:
-        if provider == "anthropic" and not self._app_config.anthropic_api_key:
+    def _update_warning(self) -> None:
+        if self._provider == "anthropic" and not self._app_config.anthropic_api_key:
             self._warning.set_markup(
                 '<span foreground="#e67e22">⚠  Anthropic API key not set — '
                 "configure it in Settings → API Keys.</span>"
             )
             self._warning.show()
-        elif provider == "deepl" and not self._app_config.deepl_api_key:
+        elif self._provider == "deepl" and not self._app_config.deepl_api_key:
             self._warning.set_markup(
                 '<span foreground="#e67e22">⚠  DeepL API key not set — '
                 "configure it in Settings → API Keys.</span>"
@@ -150,19 +176,17 @@ class ProcessorEditorDialog(Gtk.Dialog):
 
     def get_result(self) -> PostProcessorConfig:
         """Build and return the PostProcessorConfig from current form state."""
-        provider = self._provider_combo.get_active_id() or "anthropic"
-        icon = self._icon.get_text().strip() or _PROVIDER_DEFAULT_ICONS.get(provider, "system-run-symbolic")
-
-        if provider == "anthropic":
-            provider_fields = self._anthropic_form.collect()
-        else:
-            provider_fields = self._deepl_form.collect()
+        icon = (
+            self._icon.get_text().strip()
+            or _PROVIDER_DEFAULT_ICONS.get(self._provider, "system-run-symbolic")
+        )
+        provider_fields = self._form.collect()
 
         return PostProcessorConfig(
             id=self._editing_id,
             name=self._name.get_text().strip() or "Processor",
             icon=icon,
-            provider=provider,
+            provider=self._provider,
             hotkey=self._hotkey.get_text().strip(),
             **provider_fields,
         )
@@ -300,9 +324,21 @@ class PostProcessingTab(Gtk.Box):
         return widget if isinstance(widget, Gtk.Window) else None
 
     def _on_add_clicked(self, _btn: Gtk.Button) -> None:
-        dialog = ProcessorEditorDialog(self._get_parent_window(), self._app_config)
-        response = dialog.run()
-        if response == Gtk.ResponseType.OK:
+        parent = self._get_parent_window()
+
+        chooser = ProviderChooserDialog(parent)
+        if chooser.run() != Gtk.ResponseType.OK:
+            chooser.destroy()
+            return
+        provider = chooser.get_provider()
+        chooser.destroy()
+
+        cfg = make_config(
+            provider,
+            icon=_PROVIDER_DEFAULT_ICONS.get(provider, "system-run-symbolic"),
+        )
+        dialog = ProcessorEditorDialog(parent, self._app_config, cfg)
+        if dialog.run() == Gtk.ResponseType.OK:
             self._registry.add(dialog.get_result())
         dialog.destroy()
 

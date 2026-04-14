@@ -15,15 +15,29 @@ class PostProcessorConfig:
     hotkey: str = ""  # empty = no hotkey
 
     # Anthropic-specific
-    prompt: str = (
-        "Translate the following text to English. "
-        "Return only the translation:\n\n{INPUT}"
-    )
-    model: str = "claude-haiku-4-5-20251001"
+    prompt: str = ""
+    model: str = ""
     max_tokens: int = 1024
 
     # DeepL-specific
-    target_language: str = "English"
+    target_language: str = ""
+
+
+def _provider_defaults(provider: str) -> dict[str, object]:
+    """Return default field values for *provider*."""
+    if provider == "anthropic":
+        from .anthropic.config import DEFAULTS
+        return DEFAULTS
+    if provider == "deepl":
+        from .deepl.config import DEFAULTS
+        return DEFAULTS
+    return {}
+
+
+def make_config(provider: str, **overrides) -> PostProcessorConfig:
+    """Create a PostProcessorConfig pre-filled with the provider's defaults."""
+    defaults = _provider_defaults(provider)
+    return PostProcessorConfig(provider=provider, **{**defaults, **overrides})
 
 
 class PostProcessor(ABC):
