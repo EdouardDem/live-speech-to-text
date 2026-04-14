@@ -5,16 +5,9 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk  # noqa: E402
 
-from ..post_processors.base import PostProcessorConfig, make_config
-from ..post_processors.registry import PostProcessorRegistry
+from ..post_processors.base import PostProcessorConfig
+from ..post_processors import registry as provider_registry
 from ..services.config import Config
-
-_PROVIDERS = ["anthropic", "deepl"]
-_PROVIDER_LABELS = {"anthropic": "Anthropic (Claude)", "deepl": "DeepL"}
-_PROVIDER_DEFAULT_ICONS = {
-    "anthropic": "accessories-text-editor-symbolic",
-    "deepl": "preferences-desktop-locale-symbolic",
-}
 
 
 # ---------------------------------------------------------------------------
@@ -45,16 +38,17 @@ class ProviderChooserDialog(Gtk.Dialog):
         label.set_xalign(0)
         box.pack_start(label, False, False, 0)
 
+        provider_ids = provider_registry.get_provider_ids()
         self._combo = Gtk.ComboBoxText()
-        for p in _PROVIDERS:
-            self._combo.append(p, _PROVIDER_LABELS[p])
-        self._combo.set_active_id("anthropic")
+        for pid in provider_ids:
+            self._combo.append(pid, provider_registry.get_provider_label(pid))
+        self._combo.set_active(0)
         box.pack_start(self._combo, False, False, 0)
 
         self.show_all()
 
     def get_provider(self) -> str:
-        return self._combo.get_active_id() or "anthropic"
+        return self._combo.get_active_id() or provider_registry.get_provider_ids()[0]
 
 
 # ---------------------------------------------------------------------------
@@ -103,7 +97,7 @@ class ProcessorEditorDialog(Gtk.Dialog):
         # Provider (read-only)
         grid.attach(Gtk.Label(label="Provider", xalign=0), 0, 0, 1, 1)
         provider_label = Gtk.Label(
-            label=_PROVIDER_LABELS.get(self._provider, self._provider),
+            label=provider_registry.get_provider_label(self._provider),
             xalign=0,
         )
         provider_label.set_hexpand(True)
@@ -132,15 +126,8 @@ class ProcessorEditorDialog(Gtk.Dialog):
         self._hotkey.set_text(cfg.hotkey)
         grid.attach(self._hotkey, 1, 3, 1, 1)
 
-        # Provider-specific form
-        from ..post_processors.anthropic.gui import AnthropicForm
-        from ..post_processors.deepl.gui import DeepLForm
-
-        if self._provider == "anthropic":
-            self._form = AnthropicForm()
-        else:
-            self._form = DeepLForm()
-
+        # Provider-specific form (created by the registry)
+        self._form = provider_registry.create_provider_form(self._provider)
         self._form.set_margin_top(8)
         self._form.set_margin_bottom(8)
         self._form.populate(cfg)
@@ -159,16 +146,12 @@ class ProcessorEditorDialog(Gtk.Dialog):
         self.show_all()
 
     def _update_warning(self) -> None:
-        if self._provider == "anthropic" and not self._app_config.anthropic_api_key:
+        key_field = provider_registry.get_provider_api_key_field(self._provider)
+        if not getattr(self._app_config, key_field, ""):
+            label = provider_registry.get_provider_label(self._provider)
             self._warning.set_markup(
-                '<span foreground="#e67e22">⚠  Anthropic API key not set — '
-                "configure it in Settings → API Keys.</span>"
-            )
-            self._warning.show()
-        elif self._provider == "deepl" and not self._app_config.deepl_api_key:
-            self._warning.set_markup(
-                '<span foreground="#e67e22">⚠  DeepL API key not set — '
-                "configure it in Settings → API Keys.</span>"
+                f'<span foreground="#e67e22">\u26a0  {label} API key not set \u2014 '
+                "configure it in Settings \u2192 API Keys.</span>"
             )
             self._warning.show()
         else:
@@ -176,10 +159,7 @@ class ProcessorEditorDialog(Gtk.Dialog):
 
     def get_result(self) -> PostProcessorConfig:
         """Build and return the PostProcessorConfig from current form state."""
-        icon = (
-            self._icon.get_text().strip()
-            or _PROVIDER_DEFAULT_ICONS.get(self._provider, "system-run-symbolic")
-        )
+        icon = self._icon.get_text().strip() or "system-run-symbolic"
         provider_fields = self._form.collect()
 
         return PostProcessorConfig(
@@ -219,7 +199,12 @@ class ProcessorRow(Gtk.ListBoxRow):
         icon = Gtk.Image.new_from_icon_name(cfg.icon, Gtk.IconSize.LARGE_TOOLBAR)
         hbox.pack_start(icon, False, False, 0)
 
-        name_label = Gtk.Label(label=cfg.name, xalign=0)
+        provider_text = provider_registry.get_provider_label(cfg.provider)
+        name_label = Gtk.Label(xalign=0)
+        name_label.set_markup(
+            f"{cfg.name}  "
+            f'<span style="italic" foreground="#888888">{provider_text}</span>'
+        )
         name_label.set_hexpand(True)
         hbox.pack_start(name_label, True, True, 0)
 
@@ -257,7 +242,7 @@ class ProcessorRow(Gtk.ListBoxRow):
 class PostProcessingTab(Gtk.Box):
     """Notebook tab for managing the post-processor pipeline."""
 
-    def __init__(self, registry: PostProcessorRegistry, app_config: Config) -> None:
+    def __init__(self, registry: provider_registry.PostProcessorRegistry, app_config: Config) -> None:
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         self._registry = registry
         self._app_config = app_config
@@ -333,10 +318,7 @@ class PostProcessingTab(Gtk.Box):
         provider = chooser.get_provider()
         chooser.destroy()
 
-        cfg = make_config(
-            provider,
-            icon=_PROVIDER_DEFAULT_ICONS.get(provider, "system-run-symbolic"),
-        )
+        cfg = provider_registry.make_config(provider)
         dialog = ProcessorEditorDialog(parent, self._app_config, cfg)
         if dialog.run() == Gtk.ResponseType.OK:
             self._registry.add(dialog.get_result())

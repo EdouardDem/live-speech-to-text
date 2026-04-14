@@ -23,23 +23,6 @@ class PostProcessorConfig:
     target_language: str = ""
 
 
-def _provider_defaults(provider: str) -> dict[str, object]:
-    """Return default field values for *provider*."""
-    if provider == "anthropic":
-        from .anthropic.config import DEFAULTS
-        return DEFAULTS
-    if provider == "deepl":
-        from .deepl.config import DEFAULTS
-        return DEFAULTS
-    return {}
-
-
-def make_config(provider: str, **overrides) -> PostProcessorConfig:
-    """Create a PostProcessorConfig pre-filled with the provider's defaults."""
-    defaults = _provider_defaults(provider)
-    return PostProcessorConfig(provider=provider, **{**defaults, **overrides})
-
-
 class PostProcessor(ABC):
     """Abstract base for a post-processing step."""
 
