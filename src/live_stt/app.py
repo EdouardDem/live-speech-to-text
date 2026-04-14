@@ -152,7 +152,9 @@ class App:
                 GLib.idle_add(self._tray.set_state, "processing")
 
                 def on_step(result: str, _name: str, icon: str) -> None:
-                    GLib.idle_add(self._window.main_tab.append_entry, result, icon)
+                    GLib.idle_add(
+                        self._window.main_tab.append_entry, result, icon, 1
+                    )
 
                 text = self._registry.run_pipeline(text, on_step)
 

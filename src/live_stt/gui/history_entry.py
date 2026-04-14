@@ -10,6 +10,7 @@ from ..services import icons
 # -- UI texts ----------------------------------------------------------------
 
 _TXT_COPY_TOOLTIP = "Copy to clipboard"
+_INDENT_PX = 24
 
 
 class HistoryEntry(Gtk.ListBoxRow):
@@ -27,11 +28,14 @@ class HistoryEntry(Gtk.ListBoxRow):
         self,
         text: str,
         icon_name: str,
+        indent_level: int = 0,
     ):
         super().__init__()
         self.set_selectable(False)
         self.set_activatable(False)
         self._text = text
+        if indent_level > 0:
+            self.set_margin_start(_INDENT_PX * indent_level)
 
         frame = Gtk.Frame()
         frame.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
