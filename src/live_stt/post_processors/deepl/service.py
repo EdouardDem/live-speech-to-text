@@ -1,14 +1,10 @@
 import os
 
-import deepl
-
-from .. import logger
-from .base import Translator
+from ..base import PostProcessor, PostProcessorConfig
+from ...services import logger
 
 log = logger.get(__name__)
 
-# DeepL uses language codes, not language names.
-# Map common language names to DeepL target language codes.
 _LANGUAGE_MAP: dict[str, str] = {
     "bulgarian": "BG",
     "czech": "CS",
@@ -46,32 +42,42 @@ _LANGUAGE_MAP: dict[str, str] = {
     "chinese (traditional)": "ZH-HANT",
 }
 
+# Sorted language names for UI dropdowns.
+LANGUAGE_NAMES: list[str] = sorted(
+    {v: k.title() for k, v in _LANGUAGE_MAP.items()}.values()
+)
 
-def _resolve_language_code(target_language: str) -> str:
+
+def resolve_language_code(target_language: str) -> str:
     """Convert a human-readable language name to a DeepL language code."""
     key = target_language.strip().lower()
     if key in _LANGUAGE_MAP:
         return _LANGUAGE_MAP[key]
-    # If it already looks like a code (e.g. "FR", "EN-US"), pass it through.
     return target_language.upper()
 
 
-class DeepLTranslator(Translator):
-    """Translation backend using the DeepL API."""
+class DeepLProcessor(PostProcessor):
+    """Post-processor that translates text via the DeepL API."""
 
-    def __init__(self, api_key: str = "", **_kwargs):
+    def __init__(self, cfg: PostProcessorConfig, api_key: str = "") -> None:
+        super().__init__(cfg)
+        import deepl  # lazy import
+
         key = api_key or os.getenv("DEEPL_API_KEY", "")
         if not key:
             raise ValueError(
                 "DeepL API key not configured. "
-                "Set it in Settings or via the DEEPL_API_KEY environment variable."
+                "Set it in Settings → API Keys or via DEEPL_API_KEY."
             )
         self._translator = deepl.Translator(key)
 
-    def translate(self, text: str, target_language: str) -> str:
-        lang_code = _resolve_language_code(target_language)
-        log.debug("Translating to %s (%s): %s", target_language, lang_code, text)
+    def run(self, text: str) -> str:
+        lang_code = resolve_language_code(self.cfg.target_language)
+        log.debug(
+            "[%s] → DeepL (%s / %s): %s…",
+            self.cfg.name, self.cfg.target_language, lang_code, text[:60],
+        )
         result = self._translator.translate_text(text, target_lang=lang_code)
         translated = result.text.strip()
-        log.debug("Translation result: %s", translated)
+        log.debug("[%s] ← %s…", self.cfg.name, translated[:80])
         return translated

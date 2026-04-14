@@ -1,19 +1,20 @@
-"""Main tab — record / transcribe / translate controls and history."""
+"""Main tab — record / transcribe controls, post-processor toggles, history."""
+
+from collections.abc import Callable
 
 import gi
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk  # noqa: E402
 
-from .history_entry import HistoryEntry
+from .history_entry import HistoryEntry, _TRANSCRIPTION_ICON
 
-_BTN_START_LABEL = "Transcribe"
-_BTN_TRANSLATE_LABEL = "Translate"
+_BTN_TRANSCRIBE_LABEL = "Transcribe"
 _SCROLL_DELAY = 50
 
 
 class MainTab(Gtk.Box):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self.set_margin_top(16)
         self.set_margin_bottom(16)
@@ -35,55 +36,101 @@ class MainTab(Gtk.Box):
         self._scroll.add(self._list_box)
         self.pack_start(self._scroll, True, True, 0)
 
-        # Buttons
-        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        btn_box.set_homogeneous(True)
+        # Post-processor toggles section (rebuilt dynamically)
+        self._processors_frame = Gtk.Frame(label="Post-processors")
+        self._processors_frame.set_shadow_type(Gtk.ShadowType.NONE)
+        self._processors_frame.set_no_show_all(True)
 
-        self.btn_start = Gtk.Button(label=_BTN_START_LABEL)
+        self._processors_box = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL, spacing=8
+        )
+        self._processors_box.set_margin_top(4)
+        self._processors_box.set_margin_bottom(4)
+        self._processors_box.set_margin_start(8)
+        self._processors_box.set_margin_end(8)
+        self._processors_frame.add(self._processors_box)
+        self.pack_start(self._processors_frame, False, False, 0)
+
+        # Transcribe button
+        self.btn_start = Gtk.Button(label=_BTN_TRANSCRIBE_LABEL)
         self.btn_start.set_name("btn-transcribe")
-        btn_box.pack_start(self.btn_start, True, True, 0)
+        self.pack_start(self.btn_start, False, False, 0)
 
-        self.btn_translate = Gtk.Button(label=_BTN_TRANSLATE_LABEL)
-        self.btn_translate.set_name("btn-translate")
-        btn_box.pack_start(self.btn_translate, True, True, 0)
+    # -- Processor toggles ----------------------------------------------------
 
-        self.pack_start(btn_box, False, False, 0)
+    def rebuild_processors(
+        self,
+        processors: list,
+        on_toggle: Callable[[str, bool], None],
+    ) -> None:
+        """Rebuild the post-processor toggle section.
+
+        *processors* is a list of ``PostProcessorConfig`` objects.
+        *on_toggle(proc_id, enabled)* is called when a switch changes.
+        """
+        self._processors_box.foreach(self._processors_box.remove)
+
+        for cfg in processors:
+            row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            row.set_margin_start(4)
+            row.set_margin_end(4)
+
+            icon = Gtk.Image.new_from_icon_name(cfg.icon, Gtk.IconSize.LARGE_TOOLBAR)
+            icon.set_margin_bottom(2)
+            row.pack_start(icon, False, False, 0)
+
+            label = Gtk.Label(label=cfg.name)
+            label.set_max_width_chars(12)
+            label.set_ellipsize(3)  # Pango.EllipsizeMode.END
+            row.pack_start(label, False, False, 0)
+
+            switch = Gtk.Switch()
+            switch.set_active(cfg.enabled)
+            switch.set_halign(Gtk.Align.CENTER)
+            switch.connect(
+                "notify::active",
+                lambda sw, _, pid=cfg.id: on_toggle(pid, sw.get_active()),
+            )
+            row.pack_start(switch, False, False, 0)
+
+            self._processors_box.pack_start(row, False, False, 0)
+
+        if processors:
+            self._processors_frame.show_all()
+        else:
+            self._processors_frame.hide()
+
+    # -- Status / sensitivity -------------------------------------------------
 
     def set_status(self, text: str) -> None:
         self.status_label.set_text(text)
 
     def set_buttons_sensitive(self, sensitive: bool) -> None:
         self.btn_start.set_sensitive(sensitive)
-        self.btn_translate.set_sensitive(sensitive)
+        for child in self._processors_box.get_children():
+            child.set_sensitive(sensitive)
 
-    def set_recording_state(self, recording: bool, translate: bool) -> None:
+    def set_recording_state(self, recording: bool) -> None:
         if recording:
-            self.btn_start.set_label("Stop" if not translate else _BTN_START_LABEL)
-            self.btn_translate.set_label("Stop" if translate else _BTN_TRANSLATE_LABEL)
-            active_btn = self.btn_translate if translate else self.btn_start
-            active_btn.get_style_context().add_class("recording")
+            self.btn_start.set_label("Stop")
+            self.btn_start.get_style_context().add_class("recording")
         else:
-            self.btn_start.set_label(_BTN_START_LABEL)
-            self.btn_translate.set_label(_BTN_TRANSLATE_LABEL)
+            self.btn_start.set_label(_BTN_TRANSCRIBE_LABEL)
             self.btn_start.get_style_context().remove_class("recording")
-            self.btn_translate.get_style_context().remove_class("recording")
 
-    def append_entry(self, text: str, entry_type: str = "transcription") -> None:
-        """Add a history card to the list.
+    # -- History --------------------------------------------------------------
 
-        Parameters
-        ----------
-        text:
-            The transcribed or translated text.
-        entry_type:
-            ``"transcription"`` or ``"translation"``.
-        """
-        entry = HistoryEntry(text, entry_type)
+    def append_entry(
+        self,
+        text: str,
+        icon_name: str = _TRANSCRIPTION_ICON,
+    ) -> None:
+        """Add a history card."""
+        entry = HistoryEntry(text, icon_name)
         self._list_box.add(entry)
-        # Delay scroll to let GTK finish laying out the new row
         GLib.timeout_add(_SCROLL_DELAY, self._scroll_to_bottom)
 
     def _scroll_to_bottom(self) -> bool:
         adj = self._scroll.get_vadjustment()
         adj.set_value(adj.get_upper() - adj.get_page_size())
-        return False  # run only once
+        return False

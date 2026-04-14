@@ -6,18 +6,25 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk  # noqa: E402
 
 
+_TRANSCRIPTION_ICON = "audio-input-microphone-symbolic"
+
+
 class HistoryEntry(Gtk.ListBoxRow):
-    """A card representing one transcription or translation result.
+    """A card representing one entry in the transcription / processing history.
 
     Parameters
     ----------
     text:
-        The transcribed or translated text.
-    entry_type:
-        ``"transcription"`` or ``"translation"``.
+        The text to display.
+    icon_name:
+        GTK icon name shown on the left side of the card.
     """
 
-    def __init__(self, text: str, entry_type: str = "transcription"):
+    def __init__(
+        self,
+        text: str,
+        icon_name: str = _TRANSCRIPTION_ICON,
+    ):
         super().__init__()
         self.set_selectable(False)
         self.set_activatable(False)
@@ -33,12 +40,6 @@ class HistoryEntry(Gtk.ListBoxRow):
         hbox.set_margin_start(10)
         hbox.set_margin_end(10)
 
-        # Left icon
-        icon_name = (
-            "audio-input-microphone-symbolic"
-            if entry_type == "transcription"
-            else "preferences-desktop-locale-symbolic"
-        )
         icon = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.LARGE_TOOLBAR)
         icon.set_valign(Gtk.Align.START)
         icon.set_margin_top(2)

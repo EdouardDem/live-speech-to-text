@@ -29,7 +29,7 @@ _PYNPUT_SPECIAL_KEYS = {
     "f7", "f8", "f9", "f10", "f11", "f12",
 }
 
-_HOTKEY_FIELDS = {"hotkey", "translate_hotkey"}
+_HOTKEY_FIELDS = {"hotkey"}
 
 
 def _normalize_hotkey(value: str) -> str:
@@ -57,12 +57,7 @@ _GENERAL_SPEC = [
     ("log_to_console", "Output logs to console", "toggle"),
 ]
 
-_TRANSLATION_SPEC = [
-    ("translate_hotkey", "Hotkey", "entry"),
-    ("translate_language", "Language", "entry"),
-    ("translate_provider", "Provider", "combo", ["anthropic", "deepl"]),
-    ("translate_model", "Model", "entry"),
-    ("translate_max_tokens", "Max tokens", "entry"),
+_API_KEYS_SPEC = [
     ("anthropic_api_key", "Anthropic API key", "password"),
     ("deepl_api_key", "DeepL API key", "password"),
 ]
@@ -142,7 +137,7 @@ class SettingsTab(Gtk.ScrolledWindow):
             False, False, 0,
         )
         box.pack_start(
-            _build_section("Translation", _TRANSLATION_SPEC, config, self._entries),
+            _build_section("API Keys", _API_KEYS_SPEC, config, self._entries),
             False, False, 0,
         )
 
