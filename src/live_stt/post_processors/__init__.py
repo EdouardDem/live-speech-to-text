@@ -1,4 +1,4 @@
-from .base import PostProcessor, PostProcessorConfig, make_config
+from .base import PostProcessor, PostProcessorConfig
 from .registry import PostProcessorRegistry
 
-__all__ = ["PostProcessor", "PostProcessorConfig", "PostProcessorRegistry", "make_config"]
+__all__ = ["PostProcessor", "PostProcessorConfig", "PostProcessorRegistry"]

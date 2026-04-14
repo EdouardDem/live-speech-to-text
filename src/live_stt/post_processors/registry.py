@@ -1,7 +1,10 @@
 """Registry — manages the ordered list of post-processors."""
 
+from __future__ import annotations
+
 from collections.abc import Callable
 from dataclasses import asdict
+from types import ModuleType
 
 from pynput import keyboard
 
@@ -13,6 +16,49 @@ log = logger.get(__name__)
 
 # Fields present in PostProcessorConfig (used when deserialising from dicts).
 _KNOWN_FIELDS = {f for f in PostProcessorConfig.__dataclass_fields__}
+
+# ---------------------------------------------------------------------------
+# Provider catalogue — each entry is the provider's config module.
+# ---------------------------------------------------------------------------
+
+_PROVIDER_IDS: list[str] = ["anthropic", "deepl"]
+
+
+def _load_provider_config(provider: str) -> ModuleType:
+    """Lazily import and return the config module for *provider*."""
+    if provider == "anthropic":
+        from .anthropic import config
+        return config
+    if provider == "deepl":
+        from .deepl import config
+        return config
+    raise ValueError(f"Unknown post-processor provider: {provider!r}")
+
+
+def get_provider_ids() -> list[str]:
+    """Return the ordered list of available provider identifiers."""
+    return list(_PROVIDER_IDS)
+
+
+def get_provider_label(provider: str) -> str:
+    """Human-readable label for *provider*."""
+    return _load_provider_config(provider).LABEL
+
+
+def get_provider_api_key_field(provider: str) -> str:
+    """Config attribute name that holds the API key for *provider*."""
+    return _load_provider_config(provider).API_KEY_FIELD
+
+
+def create_provider_form(provider: str):
+    """Return a new GTK form widget for *provider*."""
+    return _load_provider_config(provider).create_form()
+
+
+def make_config(provider: str, **overrides) -> PostProcessorConfig:
+    """Create a PostProcessorConfig pre-filled with the provider's defaults."""
+    defaults = _load_provider_config(provider).DEFAULTS
+    return PostProcessorConfig(provider=provider, **{**defaults, **overrides})
 
 
 def _make_processor(cfg: PostProcessorConfig, app_config: Config) -> PostProcessor:
