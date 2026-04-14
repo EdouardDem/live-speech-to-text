@@ -132,7 +132,12 @@ class PostProcessorRegistry:
         proc = next((p for p in self._processors if p.id == proc_id), None)
         if proc is None:
             return
+        if proc.enabled == enabled:
+            return
         proc.enabled = enabled
+        log.info(
+            "Post-processor %s: %s", proc.name, "enabled" if enabled else "disabled"
+        )
         self._save()
 
     # -- Pipeline -------------------------------------------------------------
@@ -212,5 +217,4 @@ class PostProcessorRegistry:
         proc = next((p for p in self._processors if p.id == proc_id), None)
         if proc is None:
             return
-        proc.enabled = not proc.enabled
-        self._save()
+        self.set_enabled(proc_id, not proc.enabled)
