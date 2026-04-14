@@ -8,16 +8,18 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk  # noqa: E402
 
 from .gui.window import LiveSTTWindow
+from .post_processors import PostProcessorRegistry
 from .services.audio import AudioRecorder
 from .services.config import Config
 from .services.hotkey import HotkeyListener
 from .services import logger
 from .services.paster import Paster
 from .services.transcriber import Transcriber
-from .services.translators import TranslatorService
 from .services.tray import TrayIcon
 
 log = logger.get(__name__)
+
+_TRANSCRIPTION_ICON = "audio-input-microphone-symbolic"
 
 
 class App:
@@ -32,23 +34,30 @@ class App:
         self._recorder = AudioRecorder(config)
         self._transcriber = Transcriber(config)
         self._paster = Paster(config)
-        self._translator_service = TranslatorService(config)
+        self._registry = PostProcessorRegistry(config)
         self._hotkey = HotkeyListener(config, "hotkey", self._on_hotkey_toggle)
-        self._translate_hotkey = HotkeyListener(
-            config, "translate_hotkey", self._on_hotkey_translate_toggle
-        )
-        config.subscribe(self._on_config_changed)
         self._tray = TrayIcon(
             on_show_window=lambda: GLib.idle_add(self._show_window),
             on_quit=lambda: GLib.idle_add(self._quit),
         )
 
+        config.subscribe(self._on_config_changed)
+
         # Window
         self._window = LiveSTTWindow(
             config,
+            self._registry,
             on_settings_saved=self._on_settings_saved,
-            on_start=lambda: self._toggle(translate=False),
-            on_translate=lambda: self._toggle(translate=True),
+            on_start=lambda: self._toggle(),
+        )
+
+        # Wire processor toggle updates from main-tab switches into registry
+        self._registry.on_change(self._on_processors_changed)
+        # Initial population of the toggle section
+        GLib.idle_add(
+            self._window.main_tab.rebuild_processors,
+            self._registry.get_all(),
+            self._on_processor_switch,
         )
 
         # Connect loggers to GUI tabs
@@ -64,15 +73,13 @@ class App:
     def run(self) -> None:
         self._tray.start()
         self._hotkey.start()
-        self._translate_hotkey.start()
-        log.info("Hotkeys active: %s / %s", self._cfg.hotkey, self._cfg.translate_hotkey)
+        log.info("Hotkey active: %s", self._cfg.hotkey)
         self._window.show_all()
         threading.Thread(target=self._load_model, daemon=True).start()
         Gtk.main()
 
     def _load_model(self) -> None:
         try:
-            # Intercept NeMo's logger before it produces any output
             logger.capture_nemo_logs()
             self._transcriber.load()
             self._model_loaded = True
@@ -90,48 +97,44 @@ class App:
         if self._recorder.is_recording:
             self._recorder.stop()
         self._hotkey.stop()
-        self._translate_hotkey.stop()
         self._tray.stop()
         Gtk.main_quit()
 
-    # -- Hotkey callbacks (pynput thread → GTK thread) ------------------------
+    # -- Hotkey callback (pynput thread → GTK thread) -------------------------
 
     def _on_hotkey_toggle(self) -> None:
-        GLib.idle_add(self._toggle, False)
-
-    def _on_hotkey_translate_toggle(self) -> None:
-        GLib.idle_add(self._toggle, True)
+        GLib.idle_add(self._toggle)
 
     # -- Recording toggle -----------------------------------------------------
 
-    def _toggle(self, translate: bool) -> None:
+    def _toggle(self) -> None:
         with self._lock:
             if not self._model_loaded:
                 return
             if self._recorder.is_recording:
-                self._stop_and_process(translate)
+                self._stop_and_process()
             else:
-                self._start_recording(translate)
+                self._start_recording()
 
-    def _start_recording(self, translate: bool) -> None:
+    def _start_recording(self) -> None:
         self._recorder.start()
-        self._window.main_tab.set_recording_state(True, translate)
+        self._window.main_tab.set_recording_state(True)
         self._window.main_tab.set_status("Recording…")
         self._tray.set_state("recording")
 
-    def _stop_and_process(self, translate: bool) -> None:
+    def _stop_and_process(self) -> None:
         audio = self._recorder.stop()
-        self._window.main_tab.set_recording_state(False, translate)
+        self._window.main_tab.set_recording_state(False)
         self._window.main_tab.set_buttons_sensitive(False)
         self._window.main_tab.set_status("Transcribing…")
         self._tray.set_state("transcribing")
         threading.Thread(
-            target=self._transcribe_and_paste,
-            args=(audio, translate),
+            target=self._transcribe_and_process,
+            args=(audio,),
             daemon=True,
         ).start()
 
-    def _transcribe_and_paste(self, audio, translate: bool) -> None:
+    def _transcribe_and_process(self, audio) -> None:
         try:
             if len(audio) == 0:
                 GLib.idle_add(self._window.main_tab.set_status, "No audio captured")
@@ -143,26 +146,35 @@ class App:
                 return
 
             GLib.idle_add(
-                self._window.main_tab.append_entry, text, "transcription"
+                self._window.main_tab.append_entry, text, _TRANSCRIPTION_ICON
             )
 
-            if translate:
-                GLib.idle_add(self._window.main_tab.set_status, "Translating…")
-                GLib.idle_add(self._tray.set_state, "translating")
-                translated = self._translator_service.translate(text)
-                GLib.idle_add(
-                    self._window.main_tab.append_entry, translated, "translation"
-                )
-                text = translated
+            enabled = [p for p in self._registry.get_all() if p.enabled]
+            if enabled:
+                GLib.idle_add(self._window.main_tab.set_status, "Processing…")
+                GLib.idle_add(self._tray.set_state, "processing")
+
+                def on_step(result: str, _name: str, icon: str) -> None:
+                    GLib.idle_add(self._window.main_tab.append_entry, result, icon)
+
+                text = self._registry.run_pipeline(text, on_step)
 
             self._paster.paste(text)
             GLib.idle_add(self._window.main_tab.set_status, "Ready")
         except Exception:
-            log.exception("Transcription / paste failed")
+            log.exception("Transcription / processing failed")
             GLib.idle_add(self._window.main_tab.set_status, "Error — see logs")
         finally:
             GLib.idle_add(self._window.main_tab.set_buttons_sensitive, True)
             GLib.idle_add(self._tray.set_state, "idle")
+
+    # -- Processor toggles (GTK main-tab switches) ----------------------------
+
+    def _on_processor_switch(self, proc_id: str, enabled: bool) -> None:
+        self._registry.set_enabled(proc_id, enabled)
+
+    def _on_processors_changed(self, processors) -> None:
+        self._window.main_tab.rebuild_processors(processors, self._on_processor_switch)
 
     # -- Settings -------------------------------------------------------------
 

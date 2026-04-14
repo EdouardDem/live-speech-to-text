@@ -49,23 +49,6 @@ def main() -> None:
         help="Keyboard shortcut for pasting (e.g. 'ctrl+v', 'ctrl+shift+v')",
     )
     parser.add_argument(
-        "--translate-hotkey",
-        help="Override translation hotkey (pynput format, e.g. '<ctrl>+<shift>+t')",
-    )
-    parser.add_argument(
-        "--translate-language",
-        help="Target language for translation (default: English)",
-    )
-    parser.add_argument(
-        "--translate-model",
-        help="Claude model for translation (default: claude-haiku-4-5-20251001)",
-    )
-    parser.add_argument(
-        "--translate-max-tokens",
-        type=int,
-        help="Max tokens for translation response (default: 1024)",
-    )
-    parser.add_argument(
         "-v", "--verbose", action="store_true", help="Enable debug logging"
     )
     args = parser.parse_args()
@@ -79,15 +62,6 @@ def main() -> None:
         config.device = args.device
     if args.paste_shortcut:
         config.paste_shortcut = args.paste_shortcut
-    if args.translate_hotkey:
-        config.translate_hotkey = args.translate_hotkey
-    if args.translate_language:
-        config.translate_language = args.translate_language
-    if args.translate_model:
-        config.translate_model = args.translate_model
-    if args.translate_max_tokens:
-        config.translate_max_tokens = args.translate_max_tokens
-
     logger.setup(verbose=args.verbose, console=config.log_to_console)
 
     missing = _check_system_deps()
