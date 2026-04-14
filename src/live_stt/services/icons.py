@@ -9,7 +9,6 @@ similar APIs. Use :func:`list_slugs` to enumerate every available slug
 _ICONS: dict[str, str] = {
     # Audio & voice
     "microphone": "audio-input-microphone-symbolic",
-    "transcription": "audio-input-microphone-symbolic",
     "speaker": "audio-speakers-symbolic",
     "volume": "audio-volume-high-symbolic",
     "mute": "audio-volume-muted-symbolic",
@@ -88,9 +87,9 @@ def get(slug: str) -> str:
     return _ICONS.get(slug, _FALLBACK_ICON)
 
 
-def list_slugs() -> list[str]:
+def list_slugs(sort = False) -> list[str]:
     """Return every available slug, sorted alphabetically."""
-    return sorted(_ICONS)
+    return sorted(_ICONS) if sort else _ICONS
 
 
 def has(slug: str) -> bool:
