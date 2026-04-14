@@ -83,15 +83,16 @@ class PostProcessorRegistry:
       ``Config`` immediately.
     - Run the processing pipeline.
     - Manage per-processor pynput hotkey listeners that toggle enabled state.
-    - Notify registered change callbacks (via ``GLib.idle_add``) whenever the
-      processor list changes, so the GUI can rebuild itself.
+
+    The registry does not maintain its own change-notification system: every
+    mutation persists through ``Config.save``, and interested parties simply
+    subscribe to the ``post_processors`` key on the config.
     """
 
     def __init__(self, config: Config) -> None:
         self._config = config
         self._processors: list[PostProcessorConfig] = []
         self._hotkey_listeners: dict[str, keyboard.Listener] = {}
-        self._change_callbacks: list[Callable[[list[PostProcessorConfig]], None]] = []
         self._saving = False
 
         config.subscribe({"post_processors"}, self._on_config_changed)
@@ -108,12 +109,12 @@ class PostProcessorRegistry:
     def add(self, cfg: PostProcessorConfig) -> None:
         self._processors.append(cfg)
         self._setup_hotkey(cfg)
-        self._save_and_notify()
+        self._save()
 
     def remove(self, proc_id: str) -> None:
         self._teardown_hotkey(proc_id)
         self._processors = [p for p in self._processors if p.id != proc_id]
-        self._save_and_notify()
+        self._save()
 
     def update(self, cfg: PostProcessorConfig) -> None:
         idx = next(
@@ -124,7 +125,7 @@ class PostProcessorRegistry:
         self._teardown_hotkey(cfg.id)
         self._processors[idx] = cfg
         self._setup_hotkey(cfg)
-        self._save_and_notify()
+        self._save()
 
     def set_enabled(self, proc_id: str, enabled: bool) -> None:
         proc = next((p for p in self._processors if p.id == proc_id), None)
@@ -132,12 +133,6 @@ class PostProcessorRegistry:
             return
         proc.enabled = enabled
         self._save()
-
-    # -- Change callbacks -----------------------------------------------------
-
-    def on_change(self, callback: Callable[[list[PostProcessorConfig]], None]) -> None:
-        """Register a callback invoked (on the GTK thread) on any list change."""
-        self._change_callbacks.append(callback)
 
     # -- Pipeline -------------------------------------------------------------
 
@@ -170,10 +165,6 @@ class PostProcessorRegistry:
         finally:
             self._saving = False
 
-    def _save_and_notify(self) -> None:
-        self._save()
-        self._notify_change()
-
     # -- Internal state management --------------------------------------------
 
     def _reload(self) -> None:
@@ -190,18 +181,6 @@ class PostProcessorRegistry:
         if self._saving:
             return
         self._reload()
-        self._notify_change()
-
-    def _notify_change(self) -> None:
-        from gi.repository import GLib
-
-        snapshot = list(self._processors)
-        GLib.idle_add(self._fire_callbacks, snapshot)
-
-    def _fire_callbacks(self, snapshot: list[PostProcessorConfig]) -> bool:
-        for cb in self._change_callbacks:
-            cb(snapshot)
-        return False  # GLib.SOURCE_REMOVE
 
     # -- Per-processor hotkeys ------------------------------------------------
 
@@ -246,4 +225,3 @@ class PostProcessorRegistry:
             return
         proc.enabled = not proc.enabled
         self._save()
-        self._notify_change()

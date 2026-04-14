@@ -357,12 +357,18 @@ class PostProcessingTab(Gtk.Box):
         scroll.add(self._list_box)
         self.pack_start(scroll, True, True, 0)
 
-        registry.on_change(self._rebuild)
-        self._rebuild(registry.get_all())
+        app_config.subscribe({"post_processors"}, self._on_processors_changed)
+        self._rebuild()
 
     # -- Internal -------------------------------------------------------------
 
-    def _rebuild(self, processors: list[PostProcessorConfig]) -> None:
+    def _on_processors_changed(self, _changed: set[str]) -> None:
+        from gi.repository import GLib
+
+        GLib.idle_add(self._rebuild)
+
+    def _rebuild(self) -> None:
+        processors = self._registry.get_all()
         self._list_box.foreach(self._list_box.remove)
         for cfg in processors:
             row = ProcessorRow(
