@@ -34,6 +34,8 @@ _TXT_EDITOR_API_KEY_WARNING = (
 
 _TXT_ROW_TOOLTIP_EDIT = "Edit"
 _TXT_ROW_TOOLTIP_DELETE = "Delete"
+_TXT_ROW_TOOLTIP_UP = "Move up"
+_TXT_ROW_TOOLTIP_DOWN = "Move down"
 
 _TXT_TAB_TITLE = "Post-processors"
 _TXT_TAB_ADD_BTN = "+ Add processor"
@@ -259,6 +261,9 @@ class ProcessorRow(Gtk.ListBoxRow):
         on_edit: callable,
         on_delete: callable,
         on_toggle: callable,
+        on_move: callable,
+        can_move_up: bool,
+        can_move_down: bool,
     ) -> None:
         super().__init__()
         self.set_selectable(False)
@@ -269,6 +274,20 @@ class ProcessorRow(Gtk.ListBoxRow):
         hbox.set_margin_bottom(6)
         hbox.set_margin_start(10)
         hbox.set_margin_end(10)
+
+        up_btn = Gtk.Button.new_from_icon_name(icons.get("up"), Gtk.IconSize.SMALL_TOOLBAR)
+        up_btn.set_tooltip_text(_TXT_ROW_TOOLTIP_UP)
+        up_btn.set_relief(Gtk.ReliefStyle.NONE)
+        up_btn.set_sensitive(can_move_up)
+        up_btn.connect("clicked", lambda _: on_move(cfg.id, -1))
+        hbox.pack_start(up_btn, False, False, 0)
+
+        down_btn = Gtk.Button.new_from_icon_name(icons.get("down"), Gtk.IconSize.SMALL_TOOLBAR)
+        down_btn.set_tooltip_text(_TXT_ROW_TOOLTIP_DOWN)
+        down_btn.set_relief(Gtk.ReliefStyle.NONE)
+        down_btn.set_sensitive(can_move_down)
+        down_btn.connect("clicked", lambda _: on_move(cfg.id, 1))
+        hbox.pack_start(down_btn, False, False, 0)
 
         icon = Gtk.Image.new_from_icon_name(cfg.icon, Gtk.IconSize.LARGE_TOOLBAR)
         hbox.pack_start(icon, False, False, 0)
@@ -370,12 +389,16 @@ class PostProcessingTab(Gtk.Box):
     def _rebuild(self) -> None:
         processors = self._registry.get_all()
         self._list_box.foreach(self._list_box.remove)
-        for cfg in processors:
+        last = len(processors) - 1
+        for i, cfg in enumerate(processors):
             row = ProcessorRow(
                 cfg,
                 on_edit=self._on_edit,
                 on_delete=self._on_delete,
                 on_toggle=self._on_toggle,
+                on_move=self._on_move,
+                can_move_up=i > 0,
+                can_move_down=i < last,
             )
             self._list_box.add(row)
         if processors:
@@ -425,3 +448,6 @@ class PostProcessingTab(Gtk.Box):
 
     def _on_toggle(self, proc_id: str, enabled: bool) -> None:
         self._registry.set_enabled(proc_id, enabled)
+
+    def _on_move(self, proc_id: str, offset: int) -> None:
+        self._registry.move(proc_id, offset)

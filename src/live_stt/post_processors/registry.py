@@ -128,6 +128,21 @@ class PostProcessorRegistry:
         self._setup_hotkey(cfg)
         self._save()
 
+    def move(self, proc_id: str, offset: int) -> None:
+        """Shift *proc_id* by *offset* positions in the list (+1 = down)."""
+        idx = next(
+            (i for i, p in enumerate(self._processors) if p.id == proc_id), None
+        )
+        if idx is None:
+            return
+        new_idx = idx + offset
+        if new_idx < 0 or new_idx >= len(self._processors):
+            return
+        proc = self._processors.pop(idx)
+        self._processors.insert(new_idx, proc)
+        log.info("Post-processor %s moved to position %d", proc.name, new_idx)
+        self._save()
+
     def set_enabled(self, proc_id: str, enabled: bool) -> None:
         proc = next((p for p in self._processors if p.id == proc_id), None)
         if proc is None:
