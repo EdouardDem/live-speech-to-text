@@ -1,4 +1,3 @@
-import argparse
 import shutil
 
 from dotenv import load_dotenv
@@ -29,40 +28,8 @@ def _check_system_deps() -> list[str]:
 def main() -> None:
     load_dotenv()
 
-    parser = argparse.ArgumentParser(
-        prog="live-stt",
-        description="Live speech-to-text using NVIDIA Parakeet",
-    )
-    parser.add_argument("-c", "--config", help="Path to YAML config file")
-    parser.add_argument(
-        "--hotkey",
-        help="Override hotkey (pynput format, e.g. '<ctrl>+<shift>+s')",
-    )
-    parser.add_argument("--model", help="Override model name")
-    parser.add_argument(
-        "--device",
-        choices=["auto", "cpu", "cuda"],
-        help="Override compute device",
-    )
-    parser.add_argument(
-        "--paste-shortcut",
-        help="Keyboard shortcut for pasting (e.g. 'ctrl+v', 'ctrl+shift+v')",
-    )
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Enable debug logging"
-    )
-    args = parser.parse_args()
-
-    config = Config.load(args.config)
-    if args.hotkey:
-        config.hotkey = args.hotkey
-    if args.model:
-        config.model_name = args.model
-    if args.device:
-        config.device = args.device
-    if args.paste_shortcut:
-        config.paste_shortcut = args.paste_shortcut
-    logger.setup(verbose=args.verbose, console=config.log_to_console)
+    config = Config.load()
+    logger.setup(console=config.log_to_console)
 
     missing = _check_system_deps()
     if missing:

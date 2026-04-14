@@ -98,11 +98,6 @@ pip install -e .
 ```bash
 # Quick start (activates the virtual environment automatically)
 ./start.sh
-
-# With options
-./start.sh --hotkey '<super>+s'
-./start.sh --device cpu
-./start.sh -v
 ```
 
 If the virtual environment is already activated:
