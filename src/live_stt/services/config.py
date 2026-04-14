@@ -12,6 +12,42 @@ DEFAULT_CONFIG_PATH = Path.home() / ".config" / "live-stt" / "config.yaml"
 # Fields whose values are stored encrypted in the YAML file.
 _ENCRYPTED_FIELDS = {"anthropic_api_key", "deepl_api_key"}
 
+# Post-processors seeded into a fresh config. Edited copies persist to disk,
+# so existing users are unaffected.
+_DEFAULT_POST_PROCESSORS: list[dict] = [
+    {
+        "id": "1e6834a6-0c6e-4e34-bdf8-c5f6e1585698",
+        "name": "Translate to English",
+        "icon": "preferences-desktop-locale-symbolic",
+        "provider": "anthropic",
+        "enabled": True,
+        "hotkey": "<alt>+t",
+        "prompt": (
+            "Translate the following text to English. "
+            "Return only the translation:\n\n{INPUT}"
+        ),
+        "model": "claude-haiku-4-5-20251001",
+        "max_tokens": 1024,
+        "target_language": "",
+    },
+    {
+        "id": "edd488d7-e2b0-4177-9a11-3f9f859adf32",
+        "name": "Cleanup and format",
+        "icon": "accessories-text-editor-symbolic",
+        "provider": "anthropic",
+        "enabled": False,
+        "hotkey": "<alt>+f",
+        "prompt": (
+            "The following is a vocal transcription. Rewrite it as a clear, "
+            "well-structured email — fix grammatical errors, remove filler "
+            "words, and preserve the original intent and tone.\n\n{INPUT}"
+        ),
+        "model": "claude-haiku-4-5-20251001",
+        "max_tokens": 2048,
+        "target_language": "",
+    },
+]
+
 
 @dataclass
 class Config:
@@ -24,7 +60,9 @@ class Config:
     log_to_console: bool = False
     anthropic_api_key: str = ""
     deepl_api_key: str = ""
-    post_processors: list = field(default_factory=list)
+    post_processors: list = field(
+        default_factory=lambda: [dict(p) for p in _DEFAULT_POST_PROCESSORS]
+    )
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "_listeners", [])
