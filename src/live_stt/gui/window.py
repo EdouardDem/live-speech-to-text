@@ -13,6 +13,16 @@ from .post_processing_tab import PostProcessingTab
 from .settings_tab import SettingsTab
 from .style import apply_css
 
+# -- UI texts ----------------------------------------------------------------
+
+_TXT_WINDOW_TITLE = "Live Speech-to-Text"
+_TXT_TAB_MAIN = "Main"
+_TXT_TAB_POST_PROCESSING = "Post-processing"
+_TXT_TAB_SETTINGS = "Settings"
+_TXT_TAB_LOGS = "Logs"
+_TXT_TAB_MODEL_LOGS = "Model Logs"
+_TXT_STATUS_LOADING = "Loading model\u2026"
+
 
 class LiveSTTWindow(Gtk.Window):
     def __init__(
@@ -23,7 +33,7 @@ class LiveSTTWindow(Gtk.Window):
         on_settings_saved,
         on_start,
     ):
-        super().__init__(title="Live Speech-to-Text")
+        super().__init__(title=_TXT_WINDOW_TITLE)
         self.set_default_size(520, 480)
         self.set_border_width(12)
 
@@ -36,21 +46,21 @@ class LiveSTTWindow(Gtk.Window):
 
         self.main_tab = MainTab()
         self.main_tab.btn_start.connect("clicked", lambda _: on_start())
-        notebook.append_page(self.main_tab, Gtk.Label(label="Main"))
+        notebook.append_page(self.main_tab, Gtk.Label(label=_TXT_TAB_MAIN))
 
         self.post_processing_tab = PostProcessingTab(registry, config)
-        notebook.append_page(self.post_processing_tab, Gtk.Label(label="Post-processing"))
+        notebook.append_page(self.post_processing_tab, Gtk.Label(label=_TXT_TAB_POST_PROCESSING))
 
         self.settings_tab = SettingsTab(config, on_save=on_settings_saved)
-        notebook.append_page(self.settings_tab, Gtk.Label(label="Settings"))
+        notebook.append_page(self.settings_tab, Gtk.Label(label=_TXT_TAB_SETTINGS))
 
         self.logs_tab = LogsTab()
-        notebook.append_page(self.logs_tab, Gtk.Label(label="Logs"))
+        notebook.append_page(self.logs_tab, Gtk.Label(label=_TXT_TAB_LOGS))
 
         self.model_logs_tab = LogsTab()
-        notebook.append_page(self.model_logs_tab, Gtk.Label(label="Model Logs"))
+        notebook.append_page(self.model_logs_tab, Gtk.Label(label=_TXT_TAB_MODEL_LOGS))
 
-        self.main_tab.set_status("Loading model…")
+        self.main_tab.set_status(_TXT_STATUS_LOADING)
         self.main_tab.set_buttons_sensitive(False)
 
     def _on_delete_event(self, _widget, _event) -> bool:

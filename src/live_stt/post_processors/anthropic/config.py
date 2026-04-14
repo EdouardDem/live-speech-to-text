@@ -1,6 +1,6 @@
 """Provider metadata and default configuration for the Anthropic post-processor."""
 
-LABEL = "Anthropic (Claude)"
+LABEL = "Anthropic"
 API_KEY_FIELD = "anthropic_api_key"
 
 DEFAULTS: dict[str, object] = {
