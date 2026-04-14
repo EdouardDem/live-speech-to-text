@@ -1,9 +1,34 @@
+from collections.abc import Callable
+
 from pynput import keyboard
 
 from .config import Config
 from . import logger
 
 log = logger.get(__name__)
+
+
+def start_hotkey_listener(
+    hotkey_str: str, on_activate: Callable[[], None]
+) -> keyboard.Listener:
+    """Parse *hotkey_str* and start a pynput listener that fires *on_activate*.
+
+    Centralises the canonical-key wrapping required by ``pynput.keyboard.HotKey``.
+    Raises whatever ``keyboard.HotKey.parse`` raises on malformed input.
+    """
+    listener_cell: list[keyboard.Listener] = []
+    hk = keyboard.HotKey(keyboard.HotKey.parse(hotkey_str), on_activate)
+
+    def for_canonical(func):
+        return lambda key: func(listener_cell[0].canonical(key))
+
+    listener = keyboard.Listener(
+        on_press=for_canonical(hk.press),
+        on_release=for_canonical(hk.release),
+    )
+    listener_cell.append(listener)
+    listener.start()
+    return listener
 
 
 class HotkeyListener:
@@ -26,20 +51,8 @@ class HotkeyListener:
         return getattr(self._config, self._hotkey_key)
 
     def start(self) -> None:
-        hotkey = keyboard.HotKey(
-            keyboard.HotKey.parse(self._hotkey_str),
-            self._on_activate,
-        )
-        self._listener = keyboard.Listener(
-            on_press=self._for_canonical(hotkey.press),
-            on_release=self._for_canonical(hotkey.release),
-        )
-        self._listener.start()
+        self._listener = start_hotkey_listener(self._hotkey_str, self._on_activate)
         log.info("Hotkey listener active: %s", self._hotkey_str)
-
-    def _for_canonical(self, func):
-        """Wrap key events through the listener's canonical mapping."""
-        return lambda key: func(self._listener.canonical(key))
 
     def stop(self) -> None:
         if self._listener is not None:
