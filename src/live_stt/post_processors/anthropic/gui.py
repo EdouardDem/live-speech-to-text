@@ -7,6 +7,15 @@ from gi.repository import Gtk  # noqa: E402
 
 from ..base import PostProcessorConfig
 
+# -- UI texts ----------------------------------------------------------------
+
+_TXT_LBL_PROMPT = "Prompt"
+_TXT_LBL_MODEL = "Model"
+_TXT_LBL_MAX_TOKENS = "Max tokens"
+_TXT_HINT_PROMPT = "Use {INPUT} where the transcribed text should be inserted."
+
+_DEFAULT_MAX_TOKENS = 1024
+
 
 class AnthropicForm(Gtk.Grid):
     """Provider-specific configuration fields for an Anthropic processor."""
@@ -17,7 +26,7 @@ class AnthropicForm(Gtk.Grid):
         self.set_row_spacing(8)
 
         # Prompt
-        self.attach(Gtk.Label(label="Prompt", xalign=0), 0, 0, 1, 1)
+        self.attach(Gtk.Label(label=_TXT_LBL_PROMPT, xalign=0), 0, 0, 1, 1)
         prompt_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         self._prompt = Gtk.TextView()
         self._prompt.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
@@ -27,7 +36,7 @@ class AnthropicForm(Gtk.Grid):
         prompt_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         prompt_scroll.add(self._prompt)
         prompt_scroll.set_size_request(-1, 110)
-        hint = Gtk.Label(label="Use {INPUT} where the transcribed text should be inserted.")
+        hint = Gtk.Label(label=_TXT_HINT_PROMPT)
         hint.set_xalign(0)
         hint.get_style_context().add_class("dim-label")
         prompt_box.pack_start(prompt_scroll, True, True, 0)
@@ -35,13 +44,13 @@ class AnthropicForm(Gtk.Grid):
         self.attach(prompt_box, 1, 0, 1, 1)
 
         # Model
-        self.attach(Gtk.Label(label="Model", xalign=0), 0, 1, 1, 1)
+        self.attach(Gtk.Label(label=_TXT_LBL_MODEL, xalign=0), 0, 1, 1, 1)
         self._model = Gtk.Entry()
         self._model.set_hexpand(True)
         self.attach(self._model, 1, 1, 1, 1)
 
         # Max tokens
-        self.attach(Gtk.Label(label="Max tokens", xalign=0), 0, 2, 1, 1)
+        self.attach(Gtk.Label(label=_TXT_LBL_MAX_TOKENS, xalign=0), 0, 2, 1, 1)
         self._max_tokens = Gtk.Entry()
         self._max_tokens.set_hexpand(True)
         self.attach(self._max_tokens, 1, 2, 1, 1)
@@ -57,7 +66,7 @@ class AnthropicForm(Gtk.Grid):
         try:
             max_tokens = int(self._max_tokens.get_text())
         except ValueError:
-            max_tokens = 1024
+            max_tokens = _DEFAULT_MAX_TOKENS
         return {
             "prompt": prompt,
             "model": self._model.get_text().strip(),

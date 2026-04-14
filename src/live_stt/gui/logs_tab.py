@@ -5,6 +5,10 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk  # noqa: E402
 
+# -- UI texts ----------------------------------------------------------------
+
+_TXT_CLEAR_BTN = "Clear"
+
 
 class LogsTab(Gtk.Box):
     def __init__(self):
@@ -26,7 +30,7 @@ class LogsTab(Gtk.Box):
         sw.add(self._text_view)
         self.pack_start(sw, True, True, 0)
 
-        clear_btn = Gtk.Button(label="Clear")
+        clear_btn = Gtk.Button(label=_TXT_CLEAR_BTN)
         clear_btn.connect("clicked", self._on_clear)
         self.pack_start(clear_btn, False, False, 0)
 

@@ -8,6 +8,11 @@ from gi.repository import Gtk  # noqa: E402
 from ..base import PostProcessorConfig
 from .service import LANGUAGE_NAMES
 
+# -- UI texts ----------------------------------------------------------------
+
+_TXT_LBL_TARGET_LANGUAGE = "Target language"
+_DEFAULT_LANGUAGE = "English"
+
 
 class DeepLForm(Gtk.Grid):
     """Provider-specific configuration fields for a DeepL processor."""
@@ -17,7 +22,7 @@ class DeepLForm(Gtk.Grid):
         self.set_column_spacing(12)
         self.set_row_spacing(8)
 
-        self.attach(Gtk.Label(label="Target language", xalign=0), 0, 0, 1, 1)
+        self.attach(Gtk.Label(label=_TXT_LBL_TARGET_LANGUAGE, xalign=0), 0, 0, 1, 1)
         self._lang_combo = Gtk.ComboBoxText()
         self._lang_combo.set_hexpand(True)
         for name in LANGUAGE_NAMES:
@@ -35,4 +40,4 @@ class DeepLForm(Gtk.Grid):
         self._lang_combo.set_active(0)
 
     def collect(self) -> dict:
-        return {"target_language": self._lang_combo.get_active_text() or "English"}
+        return {"target_language": self._lang_combo.get_active_text() or _DEFAULT_LANGUAGE}
