@@ -5,8 +5,7 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk  # noqa: E402
 
-
-_TRANSCRIPTION_ICON = "audio-input-microphone-symbolic"
+from ..services import icons
 
 # -- UI texts ----------------------------------------------------------------
 
@@ -27,7 +26,7 @@ class HistoryEntry(Gtk.ListBoxRow):
     def __init__(
         self,
         text: str,
-        icon_name: str = _TRANSCRIPTION_ICON,
+        icon_name: str,
     ):
         super().__init__()
         self.set_selectable(False)
@@ -59,7 +58,7 @@ class HistoryEntry(Gtk.ListBoxRow):
 
         # Copy button
         copy_btn = Gtk.Button.new_from_icon_name(
-            "edit-copy-symbolic", Gtk.IconSize.SMALL_TOOLBAR
+            icons.get("copy"), Gtk.IconSize.SMALL_TOOLBAR
         )
         copy_btn.set_tooltip_text(_TXT_COPY_TOOLTIP)
         copy_btn.set_relief(Gtk.ReliefStyle.NONE)

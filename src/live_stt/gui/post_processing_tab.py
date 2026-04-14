@@ -8,6 +8,7 @@ from gi.repository import Gtk  # noqa: E402
 from ..post_processors.base import PostProcessorConfig
 from ..post_processors import registry as provider_registry
 from ..services.config import Config
+from ..services import icons
 
 # -- UI texts ----------------------------------------------------------------
 
@@ -27,7 +28,6 @@ _TXT_EDITOR_LBL_HOTKEY = "Hotkey (optional)"
 _TXT_EDITOR_PLACEHOLDER_ICON = "e.g. accessories-text-editor-symbolic"
 _TXT_EDITOR_PLACEHOLDER_HOTKEY = "e.g. <ctrl>+<shift>+t"
 _TXT_EDITOR_FALLBACK_NAME = "Processor"
-_TXT_EDITOR_FALLBACK_ICON = "system-run-symbolic"
 _TXT_EDITOR_API_KEY_WARNING = (
     '<span foreground="#e67e22">\u26a0  {label} API key not set \u2014 '
     "configure it in Settings \u2192 API Keys.</span>"
@@ -192,7 +192,7 @@ class ProcessorEditorDialog(Gtk.Dialog):
 
     def get_result(self) -> PostProcessorConfig:
         """Build and return the PostProcessorConfig from current form state."""
-        icon = self._icon.get_text().strip() or _TXT_EDITOR_FALLBACK_ICON
+        icon = self._icon.get_text().strip()
         provider_fields = self._form.collect()
 
         return PostProcessorConfig(
@@ -252,13 +252,13 @@ class ProcessorRow(Gtk.ListBoxRow):
         enabled_switch.connect("notify::active", lambda sw, _: on_toggle(cfg.id, sw.get_active()))
         hbox.pack_start(enabled_switch, False, False, 0)
 
-        edit_btn = Gtk.Button.new_from_icon_name("document-edit-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
+        edit_btn = Gtk.Button.new_from_icon_name(icons.get("edit"), Gtk.IconSize.SMALL_TOOLBAR)
         edit_btn.set_tooltip_text(_TXT_ROW_TOOLTIP_EDIT)
         edit_btn.set_relief(Gtk.ReliefStyle.NONE)
         edit_btn.connect("clicked", lambda _: on_edit(cfg))
         hbox.pack_start(edit_btn, False, False, 0)
 
-        del_btn = Gtk.Button.new_from_icon_name("edit-delete-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
+        del_btn = Gtk.Button.new_from_icon_name(icons.get("delete"), Gtk.IconSize.SMALL_TOOLBAR)
         del_btn.set_tooltip_text(_TXT_ROW_TOOLTIP_DELETE)
         del_btn.set_relief(Gtk.ReliefStyle.NONE)
         del_btn.connect("clicked", lambda _: on_delete(cfg.id))

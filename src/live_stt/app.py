@@ -12,15 +12,12 @@ from .post_processors import PostProcessorRegistry
 from .services.audio import AudioRecorder
 from .services.config import Config
 from .services.hotkey import HotkeyListener
-from .services import logger
+from .services import logger, icons
 from .services.paster import Paster
 from .services.transcriber import Transcriber
 from .services.tray import TrayIcon
 
 log = logger.get(__name__)
-
-_TRANSCRIPTION_ICON = "audio-input-microphone-symbolic"
-
 
 class App:
     """Main application — owns every service and the GTK window."""
@@ -146,7 +143,7 @@ class App:
                 return
 
             GLib.idle_add(
-                self._window.main_tab.append_entry, text, _TRANSCRIPTION_ICON
+                self._window.main_tab.append_entry, text, icons.get("transcription")
             )
 
             enabled = [p for p in self._registry.get_all() if p.enabled]

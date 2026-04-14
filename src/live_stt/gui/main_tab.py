@@ -7,7 +7,7 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk  # noqa: E402
 
-from .history_entry import HistoryEntry, _TRANSCRIPTION_ICON
+from .history_entry import HistoryEntry
 
 # -- UI texts ----------------------------------------------------------------
 
@@ -129,7 +129,7 @@ class MainTab(Gtk.Box):
     def append_entry(
         self,
         text: str,
-        icon_name: str = _TRANSCRIPTION_ICON,
+        icon_name: str,
     ) -> None:
         """Add a history card."""
         entry = HistoryEntry(text, icon_name)
