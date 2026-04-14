@@ -8,6 +8,10 @@ from gi.repository import Gtk  # noqa: E402
 
 _TRANSCRIPTION_ICON = "audio-input-microphone-symbolic"
 
+# -- UI texts ----------------------------------------------------------------
+
+_TXT_COPY_TOOLTIP = "Copy to clipboard"
+
 
 class HistoryEntry(Gtk.ListBoxRow):
     """A card representing one entry in the transcription / processing history.
@@ -57,7 +61,7 @@ class HistoryEntry(Gtk.ListBoxRow):
         copy_btn = Gtk.Button.new_from_icon_name(
             "edit-copy-symbolic", Gtk.IconSize.SMALL_TOOLBAR
         )
-        copy_btn.set_tooltip_text("Copy to clipboard")
+        copy_btn.set_tooltip_text(_TXT_COPY_TOOLTIP)
         copy_btn.set_relief(Gtk.ReliefStyle.NONE)
         copy_btn.set_valign(Gtk.Align.START)
         copy_btn.connect("clicked", self._on_copy)

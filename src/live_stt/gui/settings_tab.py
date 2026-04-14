@@ -10,7 +10,24 @@ from ..services import logger
 
 log = logger.get(__name__)
 
-_SAVE_MESSAGE = "Settings saved. You may need to restart the application for all changes to take effect."
+# -- UI texts ----------------------------------------------------------------
+
+_TXT_SAVE_BTN = "Save settings"
+_TXT_SAVE_MESSAGE = (
+    "Settings saved. You may need to restart the application for all "
+    "changes to take effect."
+)
+_TXT_SECTION_GENERAL = "General"
+_TXT_SECTION_API_KEYS = "API Keys"
+
+_TXT_LBL_HOTKEY = "Hotkey"
+_TXT_LBL_MODEL = "Model"
+_TXT_LBL_DEVICE = "Device"
+_TXT_LBL_PASTE_METHOD = "Paste method"
+_TXT_LBL_PASTE_SHORTCUT = "Paste shortcut"
+_TXT_LBL_LOG_TO_CONSOLE = "Output logs to console"
+_TXT_LBL_ANTHROPIC_KEY = "Anthropic API key"
+_TXT_LBL_DEEPL_KEY = "DeepL API key"
 
 # Keys that must be wrapped in <chevrons> for pynput hotkey format.
 _PYNPUT_SPECIAL_KEYS = {
@@ -49,17 +66,17 @@ def _normalize_hotkey(value: str) -> str:
     return "+".join(normalized)
 
 _GENERAL_SPEC = [
-    ("hotkey", "Hotkey", "entry"),
-    ("model_name", "Model", "entry"),
-    ("device", "Device", "combo", ["auto", "cpu", "cuda"]),
-    ("paste_method", "Paste method", "combo", ["auto", "xclip", "xdotool", "wayland"]),
-    ("paste_shortcut", "Paste shortcut", "combo", ["ctrl+shift+v", "ctrl+v"]),
-    ("log_to_console", "Output logs to console", "toggle"),
+    ("hotkey", _TXT_LBL_HOTKEY, "entry"),
+    ("model_name", _TXT_LBL_MODEL, "entry"),
+    ("device", _TXT_LBL_DEVICE, "combo", ["auto", "cpu", "cuda"]),
+    ("paste_method", _TXT_LBL_PASTE_METHOD, "combo", ["auto", "xclip", "xdotool", "wayland"]),
+    ("paste_shortcut", _TXT_LBL_PASTE_SHORTCUT, "combo", ["ctrl+shift+v", "ctrl+v"]),
+    ("log_to_console", _TXT_LBL_LOG_TO_CONSOLE, "toggle"),
 ]
 
 _API_KEYS_SPEC = [
-    ("anthropic_api_key", "Anthropic API key", "password"),
-    ("deepl_api_key", "DeepL API key", "password"),
+    ("anthropic_api_key", _TXT_LBL_ANTHROPIC_KEY, "password"),
+    ("deepl_api_key", _TXT_LBL_DEEPL_KEY, "password"),
 ]
 
 
@@ -133,15 +150,15 @@ class SettingsTab(Gtk.ScrolledWindow):
         box.set_margin_end(16)
 
         box.pack_start(
-            _build_section("General", _GENERAL_SPEC, config, self._entries),
+            _build_section(_TXT_SECTION_GENERAL, _GENERAL_SPEC, config, self._entries),
             False, False, 0,
         )
         box.pack_start(
-            _build_section("API Keys", _API_KEYS_SPEC, config, self._entries),
+            _build_section(_TXT_SECTION_API_KEYS, _API_KEYS_SPEC, config, self._entries),
             False, False, 0,
         )
 
-        save_btn = Gtk.Button(label="Save settings")
+        save_btn = Gtk.Button(label=_TXT_SAVE_BTN)
         save_btn.connect("clicked", self._on_save_clicked)
         box.pack_start(save_btn, False, False, 0)
 
@@ -174,5 +191,5 @@ class SettingsTab(Gtk.ScrolledWindow):
 
         self._cfg.save()
         self._on_save()
-        self._info_label.set_text(_SAVE_MESSAGE)
+        self._info_label.set_text(_TXT_SAVE_MESSAGE)
         self._info_label.show()
