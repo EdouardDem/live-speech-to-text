@@ -2,6 +2,8 @@ import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
+from ..services import icons
+
 
 @dataclass
 class PostProcessorConfig:
@@ -9,7 +11,7 @@ class PostProcessorConfig:
 
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     name: str = "New Processor"
-    icon: str = "system-run-symbolic"
+    icon: str = icons.get("run")
     provider: str = "anthropic"  # "anthropic" | "deepl"
     enabled: bool = True
     hotkey: str = ""  # empty = no hotkey

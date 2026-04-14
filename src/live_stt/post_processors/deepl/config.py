@@ -1,10 +1,12 @@
 """Provider metadata and default configuration for the DeepL post-processor."""
 
+from ...services import icons
+
 LABEL = "DeepL"
 API_KEY_FIELD = "deepl_api_key"
 
 DEFAULTS: dict[str, object] = {
-    "icon": "preferences-desktop-locale-symbolic",
+    "icon": icons.get("translate"),
     "target_language": "English",
 }
 

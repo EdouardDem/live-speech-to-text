@@ -1,10 +1,13 @@
 """Provider metadata and default configuration for the Anthropic post-processor."""
 
+from ...services import icons
+
+
 LABEL = "Anthropic"
 API_KEY_FIELD = "anthropic_api_key"
 
 DEFAULTS: dict[str, object] = {
-    "icon": "accessories-text-editor-symbolic",
+    "icon": icons.get("text"),
     "prompt": (
         "Translate the following text to English. "
         "Return only the translation:\n\n{INPUT}"
