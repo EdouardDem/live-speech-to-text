@@ -143,7 +143,7 @@ class App:
                 return
 
             GLib.idle_add(
-                self._window.main_tab.append_entry, text, icons.get("transcription")
+                self._window.main_tab.append_entry, text, icons.get("microphone")
             )
 
             enabled = [p for p in self._registry.get_all() if p.enabled]
