@@ -23,9 +23,8 @@ _TXT_EDITOR_CANCEL = "Cancel"
 _TXT_EDITOR_SAVE = "Save"
 _TXT_EDITOR_LBL_PROVIDER = "Provider"
 _TXT_EDITOR_LBL_NAME = "Name"
-_TXT_EDITOR_LBL_ICON = "Icon name"
+_TXT_EDITOR_LBL_ICON = "Icon"
 _TXT_EDITOR_LBL_HOTKEY = "Hotkey (optional)"
-_TXT_EDITOR_PLACEHOLDER_ICON = "e.g. accessories-text-editor-symbolic"
 _TXT_EDITOR_PLACEHOLDER_HOTKEY = "e.g. <ctrl>+<shift>+t"
 _TXT_EDITOR_FALLBACK_NAME = "Processor"
 _TXT_EDITOR_API_KEY_WARNING = (
@@ -40,6 +39,51 @@ _TXT_TAB_TITLE = "Post-processors"
 _TXT_TAB_ADD_BTN = "+ Add processor"
 _TXT_TAB_EMPTY_HINT = 'No post-processors yet. Click "+ Add processor" to create one.'
 _TXT_TAB_DELETE_CONFIRM = "Delete this post-processor?"
+
+
+# ---------------------------------------------------------------------------
+# Icon combo helper
+# ---------------------------------------------------------------------------
+
+def _build_icon_combo(selected_icon_name: str) -> Gtk.ComboBox:
+    """Return a ComboBox listing every icon from the icon service.
+
+    Each row shows a preview icon and its slug. The row whose resolved icon
+    name matches *selected_icon_name* is pre-selected; otherwise the first
+    row is selected.
+    """
+    store = Gtk.ListStore(str, str)  # slug, icon name
+    active_index = 0
+    for i, slug in enumerate(icons.list_slugs()):
+        icon_name = icons.get(slug)
+        store.append([slug, icon_name])
+        if icon_name == selected_icon_name:
+            active_index = i
+
+    combo = Gtk.ComboBox.new_with_model(store)
+    combo.set_hexpand(True)
+
+    pixbuf_renderer = Gtk.CellRendererPixbuf()
+    pixbuf_renderer.set_padding(4, 0)
+    combo.pack_start(pixbuf_renderer, False)
+    combo.add_attribute(pixbuf_renderer, "icon-name", 1)
+
+    text_renderer = Gtk.CellRendererText()
+    text_renderer.set_padding(6, 0)
+    combo.pack_start(text_renderer, True)
+    combo.add_attribute(text_renderer, "text", 0)
+
+    combo.set_active(active_index)
+    return combo
+
+
+def _icon_combo_value(combo: Gtk.ComboBox) -> str:
+    """Return the resolved icon name for the active row."""
+    model = combo.get_model()
+    it = combo.get_active_iter()
+    if it is None:
+        return icons.get("run")
+    return model[it][1]
 
 
 # ---------------------------------------------------------------------------
@@ -144,11 +188,8 @@ class ProcessorEditorDialog(Gtk.Dialog):
 
         # Icon
         grid.attach(Gtk.Label(label=_TXT_EDITOR_LBL_ICON, xalign=0), 0, 2, 1, 1)
-        self._icon = Gtk.Entry()
-        self._icon.set_hexpand(True)
-        self._icon.set_placeholder_text(_TXT_EDITOR_PLACEHOLDER_ICON)
-        self._icon.set_text(cfg.icon)
-        grid.attach(self._icon, 1, 2, 1, 1)
+        self._icon_combo = _build_icon_combo(cfg.icon)
+        grid.attach(self._icon_combo, 1, 2, 1, 1)
 
         # Hotkey
         grid.attach(Gtk.Label(label=_TXT_EDITOR_LBL_HOTKEY, xalign=0), 0, 3, 1, 1)
@@ -192,7 +233,7 @@ class ProcessorEditorDialog(Gtk.Dialog):
 
     def get_result(self) -> PostProcessorConfig:
         """Build and return the PostProcessorConfig from current form state."""
-        icon = self._icon.get_text().strip()
+        icon = _icon_combo_value(self._icon_combo)
         provider_fields = self._form.collect()
 
         return PostProcessorConfig(
