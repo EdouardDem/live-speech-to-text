@@ -127,6 +127,7 @@ class App:
 
     def _tick_recording_progress(self) -> bool:
         if not self._recorder.is_recording or self._record_started_at is None:
+            self._progress_source = None
             return False
         limit = self._cfg.max_recording_seconds
         remaining = limit - (time.monotonic() - self._record_started_at)
@@ -139,9 +140,10 @@ class App:
         return True
 
     def _stop_and_process(self) -> None:
-        if self._progress_source is not None:
-            GLib.source_remove(self._progress_source)
-            self._progress_source = None
+        source_id = self._progress_source
+        self._progress_source = None
+        if source_id is not None and GLib.MainContext.default().find_source_by_id(source_id):
+            GLib.source_remove(source_id)
         self._record_started_at = None
         audio = self._recorder.stop()
         self._window.main_tab.set_recording_state(False)
