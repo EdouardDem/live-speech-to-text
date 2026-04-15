@@ -7,6 +7,7 @@ from gi.repository import Gtk  # noqa: E402
 
 from ..post_processors.registry import PostProcessorRegistry
 from ..services.config import Config
+from .donate_tab import DonateTab
 from .logs_tab import LogsTab
 from .main_tab import MainTab
 from .post_processing_tab import PostProcessingTab
@@ -21,6 +22,7 @@ _TXT_TAB_POST_PROCESSING = "Post-processing"
 _TXT_TAB_SETTINGS = "Settings"
 _TXT_TAB_LOGS = "Logs"
 _TXT_TAB_MODEL_LOGS = "Model Logs"
+_TXT_TAB_DONATE = "Donate"
 _TXT_STATUS_LOADING = "Loading model\u2026"
 
 
@@ -59,6 +61,9 @@ class LiveSTTWindow(Gtk.Window):
 
         self.model_logs_tab = LogsTab()
         notebook.append_page(self.model_logs_tab, Gtk.Label(label=_TXT_TAB_MODEL_LOGS))
+
+        self.donate_tab = DonateTab(config)
+        notebook.append_page(self.donate_tab, Gtk.Label(label=_TXT_TAB_DONATE))
 
         self.main_tab.set_status(_TXT_STATUS_LOADING)
         self.main_tab.set_buttons_sensitive(False)
