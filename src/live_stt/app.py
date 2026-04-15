@@ -18,6 +18,16 @@ from .services.paster import Paster
 from .services.transcriber import Transcriber
 from .services.tray import TrayIcon
 
+_TXT_STATUS_READY = "Ready"
+_TXT_STATUS_ERROR_LOADING = "Error loading model"
+_TXT_STATUS_RECORDING = "Recording\u2026"
+_TXT_STATUS_TRANSCRIBING = "Transcribing\u2026"
+_TXT_STATUS_NO_AUDIO = "No audio captured"
+_TXT_STATUS_EMPTY = "Empty transcription"
+_TXT_STATUS_PROCESSING = "Processing\u2026"
+_TXT_STATUS_ERROR = "Error \u2014 see logs"
+_TXT_STATUS_SETTINGS_SAVED = "Settings saved"
+
 log = logger.get(__name__)
 
 class App:
@@ -83,11 +93,11 @@ class App:
             logger.capture_nemo_logs()
             self._transcriber.load()
             self._model_loaded = True
-            GLib.idle_add(self._window.main_tab.set_status, "Ready")
+            GLib.idle_add(self._window.main_tab.set_status, _TXT_STATUS_READY)
             GLib.idle_add(self._window.main_tab.set_buttons_sensitive, True)
         except Exception:
             log.exception("Failed to load model")
-            GLib.idle_add(self._window.main_tab.set_status, "Error loading model")
+            GLib.idle_add(self._window.main_tab.set_status, _TXT_STATUS_ERROR_LOADING)
 
     def _show_window(self) -> None:
         self._window.present()
@@ -120,7 +130,7 @@ class App:
         self._recorder.start()
         self._record_started_at = time.monotonic()
         self._window.main_tab.set_recording_state(True)
-        self._window.main_tab.set_status("Recording…")
+        self._window.main_tab.set_status(_TXT_STATUS_RECORDING)
         self._tray.set_state("recording")
         self._window.main_tab.set_stop_countdown(self._cfg.max_recording_seconds)
         self._progress_source = GLib.timeout_add(500, self._tick_recording_progress)
@@ -148,7 +158,7 @@ class App:
         audio = self._recorder.stop()
         self._window.main_tab.set_recording_state(False)
         self._window.main_tab.set_buttons_sensitive(False)
-        self._window.main_tab.set_status("Transcribing…")
+        self._window.main_tab.set_status(_TXT_STATUS_TRANSCRIBING)
         self._tray.set_state("transcribing")
         threading.Thread(
             target=self._transcribe_and_process,
@@ -159,12 +169,12 @@ class App:
     def _transcribe_and_process(self, audio) -> None:
         try:
             if len(audio) == 0:
-                GLib.idle_add(self._window.main_tab.set_status, "No audio captured")
+                GLib.idle_add(self._window.main_tab.set_status, _TXT_STATUS_NO_AUDIO)
                 return
 
             text = self._transcriber.transcribe(audio, self._cfg.sample_rate)
             if not text:
-                GLib.idle_add(self._window.main_tab.set_status, "Empty transcription")
+                GLib.idle_add(self._window.main_tab.set_status, _TXT_STATUS_EMPTY)
                 return
 
             GLib.idle_add(
@@ -173,7 +183,7 @@ class App:
 
             enabled = [p for p in self._registry.get_all() if p.enabled]
             if enabled:
-                GLib.idle_add(self._window.main_tab.set_status, "Processing…")
+                GLib.idle_add(self._window.main_tab.set_status, _TXT_STATUS_PROCESSING)
                 GLib.idle_add(self._tray.set_state, "processing")
 
                 def on_step(result: str, _name: str, icon: str) -> None:
@@ -184,10 +194,10 @@ class App:
                 text = self._registry.run_pipeline(text, on_step)
 
             self._paster.paste(text)
-            GLib.idle_add(self._window.main_tab.set_status, "Ready")
+            GLib.idle_add(self._window.main_tab.set_status, _TXT_STATUS_READY)
         except Exception:
             log.exception("Transcription / processing failed")
-            GLib.idle_add(self._window.main_tab.set_status, "Error — see logs")
+            GLib.idle_add(self._window.main_tab.set_status, _TXT_STATUS_ERROR)
         finally:
             GLib.idle_add(self._window.main_tab.set_buttons_sensitive, True)
             GLib.idle_add(self._tray.set_state, "idle")
@@ -210,4 +220,4 @@ class App:
         logger.set_console_enabled(self._cfg.log_to_console)
 
     def _on_settings_saved(self) -> None:
-        self._window.main_tab.set_status("Settings saved")
+        self._window.main_tab.set_status(_TXT_STATUS_SETTINGS_SAVED)
