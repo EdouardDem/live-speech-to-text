@@ -8,6 +8,46 @@ from . import logger
 log = logger.get(__name__)
 
 
+# Keys that must be wrapped in <chevrons> for pynput hotkey format.
+_PYNPUT_SPECIAL_KEYS = {
+    "alt", "alt_l", "alt_r", "alt_gr",
+    "ctrl", "ctrl_l", "ctrl_r",
+    "shift", "shift_l", "shift_r",
+    "cmd", "cmd_l", "cmd_r",
+    "super", "super_l", "super_r",
+    "tab", "enter", "space", "backspace", "delete",
+    "esc", "escape",
+    "up", "down", "left", "right",
+    "home", "end", "page_up", "page_down",
+    "insert", "print_screen", "scroll_lock", "pause",
+    "caps_lock", "num_lock",
+    "f1", "f2", "f3", "f4", "f5", "f6",
+    "f7", "f8", "f9", "f10", "f11", "f12",
+}
+
+
+def normalize_hotkey(value: str) -> str:
+    """Return *value* normalised to pynput's hotkey syntax.
+
+    Strips whitespace, lowercases each part, and wraps recognised modifier /
+    named keys in ``<chevrons>``.  E.g. ``"Ctrl + shift+z"`` becomes
+    ``"<ctrl>+<shift>+z"``.  Already-wrapped parts are left untouched.
+    """
+    if not value:
+        return value
+    normalized = []
+    for part in value.split("+"):
+        part = part.strip().lower()
+        bare = part.strip("<>").strip()
+        if bare in _PYNPUT_SPECIAL_KEYS and not (
+            part.startswith("<") and part.endswith(">")
+        ):
+            normalized.append(f"<{bare}>")
+        else:
+            normalized.append(part)
+    return "+".join(normalized)
+
+
 def start_hotkey_listener(
     hotkey_str: str, on_activate: Callable[[], None]
 ) -> keyboard.Listener:

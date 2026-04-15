@@ -9,6 +9,7 @@ from ..post_processors.base import PostProcessorConfig
 from ..post_processors import registry as provider_registry
 from ..services.config import Config
 from ..services import icons
+from ..services.hotkey import normalize_hotkey
 
 # -- UI texts ----------------------------------------------------------------
 
@@ -243,7 +244,7 @@ class ProcessorEditorDialog(Gtk.Dialog):
             name=self._name.get_text().strip() or _TXT_EDITOR_FALLBACK_NAME,
             icon=icon,
             provider=self._provider,
-            hotkey=self._hotkey.get_text().strip(),
+            hotkey=normalize_hotkey(self._hotkey.get_text().strip()),
             **provider_fields,
         )
 
