@@ -22,3 +22,6 @@ source .venv/bin/activate
 echo "Installing live-stt..."
 echo "[Running] pip install -e ."
 pip install -e .
+
+# Final message
+echo "Installation complete. Run ./start.sh to run the program"
