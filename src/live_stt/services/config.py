@@ -21,7 +21,7 @@ _DEFAULT_POST_PROCESSORS: list[dict] = [
         "icon": "preferences-desktop-locale-symbolic",
         "provider": "anthropic",
         "enabled": False,
-        "hotkey": "<alt>+t",
+        "hotkey": "<alt>+r",
         "prompt": (
             "Translate the following text to English. "
             "Return only the translation, with no additional commentary. "
@@ -59,6 +59,7 @@ class Config:
     paste_method: str = "auto"  # auto | xclip | xdotool | wayland
     paste_shortcut: str = "ctrl+shift+v"
     log_to_console: bool = False
+    max_recording_seconds: int = 300
     anthropic_api_key: str = ""
     deepl_api_key: str = ""
     post_processors: list = field(
