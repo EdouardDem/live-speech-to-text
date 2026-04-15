@@ -33,14 +33,21 @@ _TXT_LBL_DEEPL_KEY = "DeepL API key"
 
 _HOTKEY_FIELDS = {"hotkey"}
 
+_HELP_TEXTS: dict[str, str] = {
+    "max_recording_seconds": (
+        "Adjust this based on your available RAM — longer recordings "
+        "consume more memory during transcription."
+    ),
+}
+
 _GENERAL_SPEC = [
     ("hotkey", _TXT_LBL_HOTKEY, "entry"),
     ("model_name", _TXT_LBL_MODEL, "entry"),
     ("device", _TXT_LBL_DEVICE, "combo", ["auto", "cpu", "cuda"]),
     ("paste_method", _TXT_LBL_PASTE_METHOD, "combo", ["auto", "xclip", "xdotool", "wayland"]),
     ("paste_shortcut", _TXT_LBL_PASTE_SHORTCUT, "combo", ["ctrl+shift+v", "ctrl+v"]),
-    ("log_to_console", _TXT_LBL_LOG_TO_CONSOLE, "toggle"),
     ("max_recording_seconds", _TXT_LBL_MAX_RECORDING, "entry"),
+    ("log_to_console", _TXT_LBL_LOG_TO_CONSOLE, "toggle"),
 ]
 
 _API_KEYS_SPEC = [
@@ -62,7 +69,8 @@ def _build_section(title: str, specs: list, config: Config, entries: dict) -> Gt
     grid.set_margin_start(12)
     grid.set_margin_end(12)
 
-    for row, item in enumerate(specs):
+    row = 0
+    for item in specs:
         key, label_text, kind = item[0], item[1], item[2]
         label = Gtk.Label(label=label_text, xalign=0)
         grid.attach(label, 0, row, 1, 1)
@@ -99,6 +107,15 @@ def _build_section(title: str, specs: list, config: Config, entries: dict) -> Gt
             entry.set_hexpand(True)
             grid.attach(entry, 1, row, 1, 1)
             entries[key] = entry
+        row += 1
+
+        help_text = _HELP_TEXTS.get(key)
+        if help_text:
+            help_label = Gtk.Label(label=help_text, xalign=0)
+            help_label.set_line_wrap(True)
+            help_label.get_style_context().add_class("dim-label")
+            grid.attach(help_label, 1, row, 1, 1)
+            row += 1
 
     frame.add(grid)
     return frame
