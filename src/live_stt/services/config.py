@@ -10,7 +10,12 @@ from . import keystore
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "live-stt" / "config.yaml"
 
 # Fields whose values are stored encrypted in the YAML file.
-_ENCRYPTED_FIELDS = {"anthropic_api_key", "openai_api_key", "deepl_api_key"}
+_ENCRYPTED_FIELDS = {
+    "anthropic_api_key",
+    "openai_api_key",
+    "gemini_api_key",
+    "deepl_api_key",
+}
 
 # Post-processors seeded into a fresh config. Edited copies persist to disk,
 # so existing users are unaffected.
@@ -63,6 +68,7 @@ class Config:
     max_recording_seconds: int = 300
     anthropic_api_key: str = ""
     openai_api_key: str = ""
+    gemini_api_key: str = ""
     deepl_api_key: str = ""
     post_processors: list = field(
         default_factory=lambda: [dict(p) for p in _DEFAULT_POST_PROCESSORS]

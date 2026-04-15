@@ -30,6 +30,7 @@ _TXT_LBL_LOG_TO_CONSOLE = "Output logs to console"
 _TXT_LBL_MAX_RECORDING = "Max recording duration (seconds)"
 _TXT_LBL_ANTHROPIC_KEY = "Anthropic API key"
 _TXT_LBL_OPENAI_KEY = "OpenAI API key"
+_TXT_LBL_GEMINI_KEY = "Gemini API key"
 _TXT_LBL_DEEPL_KEY = "DeepL API key"
 
 _HOTKEY_FIELDS = {"hotkey"}
@@ -54,6 +55,7 @@ _GENERAL_SPEC = [
 _API_KEYS_SPEC = [
     ("anthropic_api_key", _TXT_LBL_ANTHROPIC_KEY, "password"),
     ("openai_api_key", _TXT_LBL_OPENAI_KEY, "password"),
+    ("gemini_api_key", _TXT_LBL_GEMINI_KEY, "password"),
     ("deepl_api_key", _TXT_LBL_DEEPL_KEY, "password"),
 ]
 
