@@ -24,7 +24,8 @@ _DEFAULT_POST_PROCESSORS: list[dict] = [
         "hotkey": "<alt>+t",
         "prompt": (
             "Translate the following text to English. "
-            "Return only the translation:\n\n{INPUT}"
+            "Return only the translation, with no additional commentary. "
+            "Text:\n\n{INPUT}"
         ),
         "model": "claude-haiku-4-5-20251001",
         "max_tokens": 1024,
