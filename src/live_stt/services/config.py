@@ -20,7 +20,7 @@ _DEFAULT_POST_PROCESSORS: list[dict] = [
         "name": "Translate to English",
         "icon": "preferences-desktop-locale-symbolic",
         "provider": "anthropic",
-        "enabled": True,
+        "enabled": False,
         "hotkey": "<alt>+t",
         "prompt": (
             "Translate the following text to English. "
@@ -51,7 +51,7 @@ _DEFAULT_POST_PROCESSORS: list[dict] = [
 
 @dataclass
 class Config:
-    hotkey: str = "<ctrl>+<shift>+z"
+    hotkey: str = "<alt>+w"
     model_name: str = "nvidia/parakeet-tdt-0.6b-v3"
     sample_rate: int = 16000
     device: str = "auto"  # auto | cpu | cuda
