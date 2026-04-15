@@ -4,8 +4,9 @@
 
 A Linux desktop application that records speech from your microphone, transcribes
 it locally, and pastes the result into the currently focused text field. An
-optional pipeline of **post-processors** (Claude, OpenAI, DeepL, …) can then
-translate, reformat, or otherwise rewrite the transcript before it is pasted.
+optional pipeline of **post-processors** (Claude, OpenAI, Gemini, DeepL, …)
+can then translate, reformat, or otherwise rewrite the transcript before it
+is pasted.
 
 Powered by [NVIDIA Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3).
 
@@ -27,8 +28,8 @@ Powered by [NVIDIA Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-
   tray icon colour reflects the current state.
 - 🕒 **Recording time-cap** — configurable maximum duration with a live
   countdown on the Stop button.
-- 🔐 **Encrypted secrets** — Anthropic / OpenAI / DeepL API keys are stored
-  encrypted in the config file.
+- 🔐 **Encrypted secrets** — Anthropic / OpenAI / Gemini / DeepL API keys are
+  stored encrypted in the config file.
 
 ## Installation
 
@@ -123,11 +124,11 @@ Closing the window hides it to the tray — right-click the tray icon and select
 The **Post-processing** tab manages an ordered list of processors. Each entry is
 a small recipe:
 
-- **Provider** — `anthropic` (Claude), `openai` (GPT), or `deepl`.
+- **Provider** — `anthropic` (Claude), `openai` (GPT), `gemini`, or `deepl`.
 - **Name** & **Icon** — shown in the Main tab toggle row and in the history.
 - **Hotkey** _(optional)_ — toggle this processor on/off without opening the GUI.
-- **Provider-specific fields** — e.g. Claude / OpenAI prompt + model + max
-  tokens, or DeepL target language.
+- **Provider-specific fields** — e.g. Claude / OpenAI / Gemini prompt + model
+  + max tokens, or DeepL target language.
 - **Enabled** switch.
 
 Two processors are seeded by default the first time the app runs:
@@ -166,10 +167,12 @@ re-encrypted on save.
 | ------------------- | ------- | -------------------------------------- |
 | `anthropic_api_key` |         | Anthropic API key (stored encrypted)   |
 | `openai_api_key`    |         | OpenAI API key (stored encrypted)      |
+| `gemini_api_key`    |         | Google Gemini API key (stored encrypted) |
 | `deepl_api_key`     |         | DeepL API key (stored encrypted)       |
 
 Anthropic models are listed [here](https://platform.claude.com/docs/en/about-claude/models/overview).
 OpenAI models are listed [here](https://platform.openai.com/docs/models).
+Gemini models are listed [here](https://ai.google.dev/gemini-api/docs/models).
 
 ![Main tab](./docs/screenshots/settings.png)
 
