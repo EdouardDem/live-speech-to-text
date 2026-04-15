@@ -135,26 +135,33 @@ class App:
         self._window.main_tab.set_stop_countdown(self._cfg.max_recording_seconds)
         self._progress_source = GLib.timeout_add(500, self._tick_recording_progress)
 
+    def _stop_recordiing_timeout(self) -> None:
+        src = self._progress_source
+        if src is not None and GLib.MainContext.default().find_source_by_id(src):
+            GLib.source_remove(src)
+        self._progress_source = None
+        self._record_started_at = None
+
     def _tick_recording_progress(self) -> bool:
+
         if not self._recorder.is_recording or self._record_started_at is None:
-            self._progress_source = None
+            self._stop_recordiing_timeout()
             return False
+
         limit = self._cfg.max_recording_seconds
         remaining = limit - (time.monotonic() - self._record_started_at)
         self._window.main_tab.set_stop_countdown(remaining)
+
         if remaining <= 0:
             log.info("Recording auto-stopped after %d seconds", limit)
-            self._progress_source = None
+            self._stop_recordiing_timeout()
             self._toggle()
             return False
+
         return True
 
     def _stop_and_process(self) -> None:
-        source_id = self._progress_source
-        self._progress_source = None
-        if source_id is not None and GLib.MainContext.default().find_source_by_id(source_id):
-            GLib.source_remove(source_id)
-        self._record_started_at = None
+        self._stop_recordiing_timeout()
         audio = self._recorder.stop()
         self._window.main_tab.set_recording_state(False)
         self._window.main_tab.set_buttons_sensitive(False)
