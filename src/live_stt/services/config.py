@@ -61,7 +61,6 @@ class Config:
     log_to_console: bool = False
     anthropic_api_key: str = ""
     deepl_api_key: str = ""
-    donate_url: str = "https://www.buymeacoffee.com/"
     post_processors: list = field(
         default_factory=lambda: [dict(p) for p in _DEFAULT_POST_PROCESSORS]
     )

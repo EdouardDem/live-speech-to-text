@@ -62,7 +62,7 @@ class LiveSTTWindow(Gtk.Window):
         self.model_logs_tab = LogsTab()
         notebook.append_page(self.model_logs_tab, Gtk.Label(label=_TXT_TAB_MODEL_LOGS))
 
-        self.donate_tab = DonateTab(config)
+        self.donate_tab = DonateTab()
         notebook.append_page(self.donate_tab, Gtk.Label(label=_TXT_TAB_DONATE))
 
         self.main_tab.set_status(_TXT_STATUS_LOADING)
