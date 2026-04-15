@@ -22,13 +22,16 @@ _KNOWN_FIELDS = {f for f in PostProcessorConfig.__dataclass_fields__}
 # Provider catalogue — each entry is the provider's config module.
 # ---------------------------------------------------------------------------
 
-_PROVIDER_IDS: list[str] = ["anthropic", "deepl"]
+_PROVIDER_IDS: list[str] = ["anthropic", "openai", "deepl"]
 
 
 def _load_provider_config(provider: str) -> ModuleType:
     """Lazily import and return the config module for *provider*."""
     if provider == "anthropic":
         from .anthropic import config
+        return config
+    if provider == "openai":
+        from .openai import config
         return config
     if provider == "deepl":
         from .deepl import config
@@ -67,6 +70,9 @@ def _make_processor(cfg: PostProcessorConfig, app_config: Config) -> PostProcess
     if cfg.provider == "anthropic":
         from .anthropic.service import AnthropicProcessor
         return AnthropicProcessor(cfg, api_key=app_config.anthropic_api_key)
+    if cfg.provider == "openai":
+        from .openai.service import OpenAIProcessor
+        return OpenAIProcessor(cfg, api_key=app_config.openai_api_key)
     if cfg.provider == "deepl":
         from .deepl.service import DeepLProcessor
         return DeepLProcessor(cfg, api_key=app_config.deepl_api_key)
