@@ -41,7 +41,8 @@ _DEFAULT_POST_PROCESSORS: list[dict] = [
         "prompt": (
             "The following is a vocal transcription. Rewrite it as a clear, "
             "well-structured email — fix grammatical errors, remove filler "
-            "words, and preserve the original intent and tone.\n\n{INPUT}"
+            "words, and preserve the original intent and tone. "
+            "Return no additional commentary. \n\n{INPUT}"
         ),
         "model": "claude-haiku-4-5-20251001",
         "max_tokens": 2048,
