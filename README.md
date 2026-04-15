@@ -14,6 +14,7 @@ Powered by [NVIDIA Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-
 > This tool is particularly useful for talking to Claude Code (or any other
 > coding agent) instead of typing — dictate prompts, instructions, or
 > follow-up questions straight into the focused terminal or editor.
+> If you are a non-English speaker, you can automatically translate the transcript to English. This may consume fewer tokens.
 
 ![Main tab](./docs/screenshots/main.png)
 
