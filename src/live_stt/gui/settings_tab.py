@@ -27,6 +27,7 @@ _TXT_LBL_DEVICE = "Device"
 _TXT_LBL_PASTE_METHOD = "Paste method"
 _TXT_LBL_PASTE_SHORTCUT = "Paste shortcut"
 _TXT_LBL_LOG_TO_CONSOLE = "Output logs to console"
+_TXT_LBL_MAX_RECORDING = "Max recording duration (seconds)"
 _TXT_LBL_ANTHROPIC_KEY = "Anthropic API key"
 _TXT_LBL_DEEPL_KEY = "DeepL API key"
 
@@ -39,6 +40,7 @@ _GENERAL_SPEC = [
     ("paste_method", _TXT_LBL_PASTE_METHOD, "combo", ["auto", "xclip", "xdotool", "wayland"]),
     ("paste_shortcut", _TXT_LBL_PASTE_SHORTCUT, "combo", ["ctrl+shift+v", "ctrl+v"]),
     ("log_to_console", _TXT_LBL_LOG_TO_CONSOLE, "toggle"),
+    ("max_recording_seconds", _TXT_LBL_MAX_RECORDING, "entry"),
 ]
 
 _API_KEYS_SPEC = [

@@ -140,6 +140,11 @@ class MainTab(Gtk.Box):
             self.btn_start.set_label(_TXT_BTN_TRANSCRIBE)
             self.btn_start.get_style_context().remove_class("recording")
 
+    def set_stop_countdown(self, remaining_seconds: float) -> None:
+        remaining = max(0, int(remaining_seconds))
+        minutes, seconds = divmod(remaining, 60)
+        self.btn_start.set_label(f"{_TXT_BTN_STOP} ({minutes:d}:{seconds:02d})")
+
     # -- History --------------------------------------------------------------
 
     def append_entry(

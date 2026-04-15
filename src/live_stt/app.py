@@ -1,6 +1,7 @@
 """Application — orchestrates services, GUI window, hotkeys, and tray icon."""
 
 import threading
+import time
 
 import gi
 
@@ -26,6 +27,8 @@ class App:
         self._cfg = config
         self._lock = threading.Lock()
         self._model_loaded = False
+        self._record_started_at: float | None = None
+        self._progress_source: int | None = None
 
         # Services
         self._recorder = AudioRecorder(config)
@@ -115,11 +118,31 @@ class App:
 
     def _start_recording(self) -> None:
         self._recorder.start()
+        self._record_started_at = time.monotonic()
         self._window.main_tab.set_recording_state(True)
         self._window.main_tab.set_status("Recording…")
         self._tray.set_state("recording")
+        self._window.main_tab.set_stop_countdown(self._cfg.max_recording_seconds)
+        self._progress_source = GLib.timeout_add(500, self._tick_recording_progress)
+
+    def _tick_recording_progress(self) -> bool:
+        if not self._recorder.is_recording or self._record_started_at is None:
+            return False
+        limit = self._cfg.max_recording_seconds
+        remaining = limit - (time.monotonic() - self._record_started_at)
+        self._window.main_tab.set_stop_countdown(remaining)
+        if remaining <= 0:
+            log.info("Recording auto-stopped after %d seconds", limit)
+            self._progress_source = None
+            self._toggle()
+            return False
+        return True
 
     def _stop_and_process(self) -> None:
+        if self._progress_source is not None:
+            GLib.source_remove(self._progress_source)
+            self._progress_source = None
+        self._record_started_at = None
         audio = self._recorder.stop()
         self._window.main_tab.set_recording_state(False)
         self._window.main_tab.set_buttons_sensitive(False)
