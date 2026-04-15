@@ -9,6 +9,11 @@ reformat, or otherwise rewrite the transcript before it is pasted.
 
 Powered by [NVIDIA Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3).
 
+> [!TIP]
+> This tool is particularly useful for talking to Claude Code (or any other
+> coding agent) instead of typing — dictate prompts, instructions, or
+> follow-up questions straight into the focused terminal or editor.
+
 ![Main tab](./docs/screenshots/main.png)
 
 ## Highlights
