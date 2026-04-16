@@ -36,9 +36,16 @@ Powered by [NVIDIA Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-
 
 ### Quick install
 
+The install script handles system packages, virtual environment creation, and
+Python dependencies in one step:
+
 ```bash
 ./install.sh
 ```
+
+> [!NOTE]
+> The virtual environment is created with `--system-site-packages` so that
+> the GTK 3 Python bindings (`python3-gi`) installed via `apt` are accessible.
 
 To remove:
 
@@ -54,7 +61,7 @@ To remove:
 # Audio capture
 sudo apt install libportaudio2
 
-# GTK 3 Python bindings
+# GTK 3 Python bindings (must be installed via apt, not pip)
 sudo apt install python3-gi python3-gi-cairo gir1.2-gtk-3.0
 
 # Text insertion (X11)
