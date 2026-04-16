@@ -4,28 +4,28 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "live-stt"
-version = "0.1.0"
+version = "0.2.0"
 description = "Live speech-to-text daemon using NVIDIA Parakeet on Linux"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 dependencies = [
-    "nemo_toolkit[asr]",
-    "sounddevice",
-    "soundfile",
-    "pynput",
-    "pystray",
-    "Pillow",
-    "PyYAML",
-    "numpy",
-    "anthropic",
-    "openai",
-    "google-genai",
-    "deepl",
-    "python-dotenv",
+    "nemo_toolkit[asr]==2.7.2",
+    "sounddevice==0.5.5",
+    "soundfile==0.13.1",
+    "pynput==1.8.1",
+    "pystray==0.19.5",
+    "Pillow==10.2.0",
+    "PyYAML==6.0.3",
+    "numpy==2.4.4",
+    "anthropic==0.95.0",
+    "openai==2.32.0",
+    "google-genai==1.73.1",
+    "deepl==1.30.0",
+    "python-dotenv==1.2.2",
 ]
 
 [project.optional-dependencies]
-gui = ["PyGObject"]
+gui = ["PyGObject==3.48.2"]
 
 [project.scripts]
 live-stt = "live_stt.__main__:main"
