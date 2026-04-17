@@ -15,10 +15,11 @@ from .history_entry import HistoryEntry
 _TXT_BTN_TRANSCRIBE = "Record"
 _TXT_BTN_STOP = "Stop"
 _TXT_BTN_CANCEL_TOOLTIP = "Cancel recording (skip transcription and pipeline)"
+_TXT_BTN_OPEN_TOOLTIP = "Load audio file (feature coming soon)"
 _TXT_STATUS_INIT = "Initializing\u2026"
 _TXT_FRAME_PROCESSORS = "Post-processors"
 
-_CANCEL_BTN_MIN_WIDTH = 64
+_SIDE_BTN_MIN_WIDTH = 64
 
 _SCROLL_DELAY = 50
 
@@ -64,9 +65,15 @@ class MainTab(Gtk.Box):
         # Transcribe + cancel buttons (cancel sits to the right of record/stop)
         controls_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
 
-        left_spacer = Gtk.Box()
-        left_spacer.set_size_request(_CANCEL_BTN_MIN_WIDTH, -1)
-        controls_box.pack_start(left_spacer, False, False, 0)
+        btn_load = Gtk.Button()
+        btn_load.set_name("btn-load")
+        btn_load.set_tooltip_text(_TXT_BTN_OPEN_TOOLTIP)
+        btn_load.set_image(
+            Gtk.Image.new_from_icon_name(icons.get("open"), Gtk.IconSize.BUTTON)
+        )
+        btn_load.set_size_request(_SIDE_BTN_MIN_WIDTH, -1)
+        btn_load.set_sensitive(False)
+        controls_box.pack_start(btn_load, False, False, 0)
 
         self.btn_start = Gtk.Button(label=_TXT_BTN_TRANSCRIBE)
         self.btn_start.set_name("btn-transcribe")
@@ -78,7 +85,7 @@ class MainTab(Gtk.Box):
         self.btn_cancel.set_image(
             Gtk.Image.new_from_icon_name(icons.get("delete"), Gtk.IconSize.BUTTON)
         )
-        self.btn_cancel.set_size_request(_CANCEL_BTN_MIN_WIDTH, -1)
+        self.btn_cancel.set_size_request(_SIDE_BTN_MIN_WIDTH, -1)
         self.btn_cancel.set_sensitive(False)
         controls_box.pack_start(self.btn_cancel, False, False, 0)
 
