@@ -7,14 +7,18 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk  # noqa: E402
 
+from ..services import icons
 from .history_entry import HistoryEntry
 
 # -- UI texts ----------------------------------------------------------------
 
 _TXT_BTN_TRANSCRIBE = "Record"
 _TXT_BTN_STOP = "Stop"
+_TXT_BTN_CANCEL_TOOLTIP = "Cancel recording (skip transcription and pipeline)"
 _TXT_STATUS_INIT = "Initializing\u2026"
 _TXT_FRAME_PROCESSORS = "Post-processors"
+
+_CANCEL_BTN_MIN_WIDTH = 64
 
 _SCROLL_DELAY = 50
 
@@ -57,10 +61,24 @@ class MainTab(Gtk.Box):
         self._processors_frame.add(self._processors_box)
         self.pack_start(self._processors_frame, False, False, 0)
 
-        # Transcribe button
+        # Transcribe + cancel buttons (cancel sits to the right of record/stop)
+        controls_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+
         self.btn_start = Gtk.Button(label=_TXT_BTN_TRANSCRIBE)
         self.btn_start.set_name("btn-transcribe")
-        self.pack_start(self.btn_start, False, False, 0)
+        controls_box.pack_start(self.btn_start, True, True, 0)
+
+        self.btn_cancel = Gtk.Button()
+        self.btn_cancel.set_name("btn-cancel")
+        self.btn_cancel.set_tooltip_text(_TXT_BTN_CANCEL_TOOLTIP)
+        self.btn_cancel.set_image(
+            Gtk.Image.new_from_icon_name(icons.get("delete"), Gtk.IconSize.BUTTON)
+        )
+        self.btn_cancel.set_size_request(_CANCEL_BTN_MIN_WIDTH, -1)
+        self.btn_cancel.set_sensitive(False)
+        controls_box.pack_start(self.btn_cancel, False, False, 0)
+
+        self.pack_start(controls_box, False, False, 0)
 
         # Enabled post-processors summary (italic, below the record button)
         self._enabled_label = Gtk.Label()
@@ -133,6 +151,7 @@ class MainTab(Gtk.Box):
             child.set_sensitive(sensitive)
 
     def set_recording_state(self, recording: bool) -> None:
+        self.btn_cancel.set_sensitive(recording)
         if recording:
             self.btn_start.set_label(_TXT_BTN_STOP)
             self.btn_start.get_style_context().add_class("recording")

@@ -27,6 +27,7 @@ _TXT_STATUS_EMPTY = "Empty transcription"
 _TXT_STATUS_PROCESSING = "Processing\u2026"
 _TXT_STATUS_ERROR = "Error \u2014 see logs"
 _TXT_STATUS_SETTINGS_SAVED = "Settings saved"
+_TXT_STATUS_CANCELLED = "Recording cancelled"
 
 log = logger.get(__name__)
 
@@ -46,6 +47,9 @@ class App:
         self._paster = Paster(config)
         self._registry = PostProcessorRegistry(config)
         self._hotkey = HotkeyListener(config, "hotkey", self._on_hotkey_toggle)
+        self._cancel_hotkey = HotkeyListener(
+            config, "cancel_hotkey", self._on_hotkey_cancel
+        )
         self._tray = TrayIcon(
             on_show_window=lambda: GLib.idle_add(self._show_window),
             on_quit=lambda: GLib.idle_add(self._quit),
@@ -59,6 +63,7 @@ class App:
             self._registry,
             on_settings_saved=self._on_settings_saved,
             on_start=lambda: self._toggle(),
+            on_cancel=lambda: self._cancel(),
         )
 
         # Keep the main-tab processor section in sync with config changes.
@@ -83,7 +88,9 @@ class App:
     def run(self) -> None:
         self._tray.start()
         self._hotkey.start()
+        self._cancel_hotkey.start()
         log.info("Hotkey active: %s", self._cfg.hotkey)
+        log.info("Cancel hotkey active: %s", self._cfg.cancel_hotkey)
         self._window.show_all()
         threading.Thread(target=self._load_model, daemon=True).start()
         Gtk.main()
@@ -107,6 +114,7 @@ class App:
         if self._recorder.is_recording:
             self._recorder.stop()
         self._hotkey.stop()
+        self._cancel_hotkey.stop()
         self._tray.stop()
         Gtk.main_quit()
 
@@ -114,6 +122,9 @@ class App:
 
     def _on_hotkey_toggle(self) -> None:
         GLib.idle_add(self._toggle)
+
+    def _on_hotkey_cancel(self) -> None:
+        GLib.idle_add(self._cancel)
 
     # -- Recording toggle -----------------------------------------------------
 
@@ -125,6 +136,17 @@ class App:
                 self._stop_and_process()
             else:
                 self._start_recording()
+
+    def _cancel(self) -> None:
+        with self._lock:
+            if not self._recorder.is_recording:
+                return
+            self._stop_recordiing_timeout()
+            self._recorder.stop()
+            self._window.main_tab.set_recording_state(False)
+            self._window.main_tab.set_status(_TXT_STATUS_CANCELLED)
+            self._tray.set_state("idle")
+            log.info("Recording cancelled by user")
 
     def _start_recording(self) -> None:
         self._recorder.start()

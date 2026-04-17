@@ -59,6 +59,7 @@ _DEFAULT_POST_PROCESSORS: list[dict] = [
 @dataclass
 class Config:
     hotkey: str = "<alt>+w"
+    cancel_hotkey: str = "<alt>+<esc>"
     model_name: str = "nvidia/parakeet-tdt-0.6b-v3"
     sample_rate: int = 16000
     device: str = "auto"  # auto | cpu | cuda

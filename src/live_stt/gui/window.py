@@ -34,6 +34,7 @@ class LiveSTTWindow(Gtk.Window):
         *,
         on_settings_saved,
         on_start,
+        on_cancel,
     ):
         super().__init__(title=_TXT_WINDOW_TITLE)
         self.set_default_size(640, 600)
@@ -48,6 +49,7 @@ class LiveSTTWindow(Gtk.Window):
 
         self.main_tab = MainTab()
         self.main_tab.btn_start.connect("clicked", lambda _: on_start())
+        self.main_tab.btn_cancel.connect("clicked", lambda _: on_cancel())
         notebook.append_page(self.main_tab, Gtk.Label(label=_TXT_TAB_MAIN))
 
         self.post_processing_tab = PostProcessingTab(registry, config)

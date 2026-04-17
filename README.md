@@ -23,8 +23,8 @@ Powered by [NVIDIA Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-
 - 🎙️ **Local transcription** — Parakeet model runs on your machine (CPU or CUDA).
 - 🔌 **Post-processor pipeline** — chain any number of LLM/translation steps,
   each with its own icon, hotkey, and on/off toggle.
-- ⌨️ **Global hotkeys** — start/stop recording or toggle individual processors
-  without touching the mouse.
+- ⌨️ **Global hotkeys** — start/stop recording, cancel a recording in progress,
+  or toggle individual processors without touching the mouse.
 - 🖥️ **GTK 3 GUI + system tray** — the window can be hidden to the tray; the
   tray icon colour reflects the current state.
 - 🕒 **Recording time-cap** — configurable maximum duration with a live
@@ -115,6 +115,10 @@ live-stt
 5. The final text is pasted into whatever input field has focus; intermediate
    results stay visible in the history.
 
+To **cancel** a recording in progress (discard the audio without transcribing
+or running any post-processor), press the cancel hotkey (default
+**`<alt>+<esc>`**) or click the small button to the right of **Stop**.
+
 ### System tray
 
 Closing the window hides it to the tray — right-click the tray icon and select
@@ -158,6 +162,7 @@ re-encrypted on save.
 | Setting                  | Default                       | Description                                     |
 | ------------------------ | ----------------------------- | ----------------------------------------------- |
 | `hotkey`                 | `<alt>+w`                     | Global record / stop hotkey (pynput format)     |
+| `cancel_hotkey`          | `<alt>+<esc>`                 | Global hotkey to cancel a recording in progress |
 | `model_name`             | `nvidia/parakeet-tdt-0.6b-v3` | HuggingFace model identifier                    |
 | `device`                 | `auto`                        | `auto`, `cpu`, or `cuda`                        |
 | `paste_method`           | `auto`                        | `auto`, `xclip`, `xdotool`, `wayland`           |
@@ -194,6 +199,7 @@ must be wrapped in chevrons; the GUI normalises this for you, so typing
 | Default        | Action                                          |
 | -------------- | ----------------------------------------------- |
 | `<alt>+w`      | Toggle recording                                |
+| `<alt>+<esc>`  | Cancel recording (discard audio, skip pipeline) |
 | `<alt>+t`      | Toggle the **Translate to English** processor   |
 | `<alt>+f`      | Toggle the **Cleanup and format** processor     |
 

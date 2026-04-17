@@ -21,7 +21,8 @@ _TXT_SAVE_MESSAGE = (
 _TXT_SECTION_GENERAL = "General"
 _TXT_SECTION_API_KEYS = "API Keys"
 
-_TXT_LBL_HOTKEY = "Hotkey"
+_TXT_LBL_HOTKEY = "Record Hotkey"
+_TXT_LBL_CANCEL_HOTKEY = "Cancel hotkey"
 _TXT_LBL_MODEL = "Model"
 _TXT_LBL_DEVICE = "Device"
 _TXT_LBL_PASTE_METHOD = "Paste method"
@@ -33,7 +34,7 @@ _TXT_LBL_OPENAI_KEY = "OpenAI API key"
 _TXT_LBL_GEMINI_KEY = "Gemini API key"
 _TXT_LBL_DEEPL_KEY = "DeepL API key"
 
-_HOTKEY_FIELDS = {"hotkey"}
+_HOTKEY_FIELDS = {"hotkey", "cancel_hotkey"}
 
 _HELP_TEXTS: dict[str, str] = {
     "max_recording_seconds": (
@@ -44,6 +45,7 @@ _HELP_TEXTS: dict[str, str] = {
 
 _GENERAL_SPEC = [
     ("hotkey", _TXT_LBL_HOTKEY, "entry"),
+    ("cancel_hotkey", _TXT_LBL_CANCEL_HOTKEY, "entry"),
     ("model_name", _TXT_LBL_MODEL, "entry"),
     ("device", _TXT_LBL_DEVICE, "combo", ["auto", "cpu", "cuda"]),
     ("paste_method", _TXT_LBL_PASTE_METHOD, "combo", ["auto", "xclip", "xdotool", "wayland"]),

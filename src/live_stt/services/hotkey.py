@@ -25,6 +25,11 @@ _PYNPUT_SPECIAL_KEYS = {
     "f7", "f8", "f9", "f10", "f11", "f12",
 }
 
+# Aliases mapped to the canonical name pynput's Key enum recognises.
+_PYNPUT_KEY_ALIASES = {
+    "escape": "esc",
+}
+
 
 def normalize_hotkey(value: str) -> str:
     """Return *value* normalised to pynput's hotkey syntax.
@@ -39,9 +44,8 @@ def normalize_hotkey(value: str) -> str:
     for part in value.split("+"):
         part = part.strip().lower()
         bare = part.strip("<>").strip()
-        if bare in _PYNPUT_SPECIAL_KEYS and not (
-            part.startswith("<") and part.endswith(">")
-        ):
+        bare = _PYNPUT_KEY_ALIASES.get(bare, bare)
+        if bare in _PYNPUT_SPECIAL_KEYS:
             normalized.append(f"<{bare}>")
         else:
             normalized.append(part)
