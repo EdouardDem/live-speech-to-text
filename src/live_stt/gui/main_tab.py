@@ -64,6 +64,10 @@ class MainTab(Gtk.Box):
         # Transcribe + cancel buttons (cancel sits to the right of record/stop)
         controls_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
 
+        left_spacer = Gtk.Box()
+        left_spacer.set_size_request(_CANCEL_BTN_MIN_WIDTH, -1)
+        controls_box.pack_start(left_spacer, False, False, 0)
+
         self.btn_start = Gtk.Button(label=_TXT_BTN_TRANSCRIBE)
         self.btn_start.set_name("btn-transcribe")
         controls_box.pack_start(self.btn_start, True, True, 0)
